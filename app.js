@@ -72,44 +72,6 @@ function show(view) {
 $('prev').onclick = () => go(-1);
 $('next').onclick = () => go(1);
 $('done').onclick = () => { store.toggleDone(store.current()); refresh(); };
-// Lock-screen controls: a silent looping <audio> keeps a media session alive so Android shows play/pause.
-// Verified on Chrome (Galaxy S23); Samsung Internet behaves differently.
-const keepAlive = new Audio('silence.wav');
-keepAlive.loop = true;
-let isPlaying = false;
-
-function syncSession() {
-  if (!('mediaSession' in navigator)) return;
-  navigator.mediaSession.metadata = new MediaMetadata({ title: videos[indexOf(store.current())].title, artist: 'Read365' });
-  navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
-}
-
-// Without this the lock screen shows the 1-second silent file's progress, looping
-function updatePosition() {
-  if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
-  const { duration, position } = player.info();
-  if (!(duration > 0)) return;
-  try {
-    navigator.mediaSession.setPositionState({ duration, position: Math.min(position, duration), playbackRate: 1 });
-  } catch { /* invalid state: skip */ }
-}
-
-function playNow() {
-  keepAlive.play().catch(() => {});
-  player.play();
-  // If the video didn't actually start (blocked in the background), don't leave the silent loop pretending to play
-  setTimeout(() => { if (!isPlaying) { keepAlive.pause(); syncSession(); } }, 3000);
-}
-function pauseNow() { player.pause(); }
-
-if ('mediaSession' in navigator) {
-  const ms = navigator.mediaSession;
-  ms.setActionHandler('play', playNow);
-  ms.setActionHandler('pause', pauseNow);
-  ms.setActionHandler('nexttrack', () => { go(1); playNow(); });
-  ms.setActionHandler('previoustrack', () => { go(-1); playNow(); });
-}
-
 $('navPlayer').onclick = () => show('playerView');
 $('navPlaylist').onclick = () => show('playlistView');
 $('navSettings').onclick = () => show('settingsView');
@@ -125,20 +87,12 @@ async function start() {
   $('retry').hidden = true;
   try {
     await player.mount($('yt'), {
-      onTick: (t) => { store.savePosition(store.current(), t); updatePosition(); },
+      onTick: (t) => store.savePosition(store.current(), t),
       onEnded: () => {
         const id = store.current();
         store.savePosition(id, 0);
         if (!store.isDone(id)) store.toggleDone(id);
         go(1);
-      },
-      onState: (code) => {
-        // YT states: 1 playing, 0 ended, 2 paused, 5 cued. Buffering (3) and unstarted (-1) leave things as they are.
-        if (code === 1) keepAlive.play().catch(() => {});
-        else if (code === 0 || code === 2 || code === 5) keepAlive.pause();
-        if (code === 1 || code === 0 || code === 2 || code === 5) isPlaying = code === 1;
-        syncSession();
-        updatePosition();
       },
       onError: (code) => showError(
         code === 100 ? 'This video was removed or is private.' : "This video can't be played in the app.",

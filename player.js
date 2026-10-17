@@ -4,7 +4,6 @@ let timer;
 let onTick = () => {};
 let onEnded = () => {};
 let onError = () => {};
-let onState = () => {};
 let resumeAt = 0;
 
 const apiReady = () => new Promise((resolve, reject) => {
@@ -23,7 +22,6 @@ function tick() {
 
 function onStateChange(e) {
   const S = window.YT.PlayerState;
-  onState(e.data);
   if (e.data === S.PLAYING) {
     clearInterval(timer);
     timer = setInterval(tick, 5000);
@@ -37,7 +35,7 @@ function onStateChange(e) {
 }
 
 export async function mount(el, handlers) {
-  ({ onTick, onEnded, onError, onState } = handlers);
+  ({ onTick, onEnded, onError } = handlers);
   await apiReady();
   await new Promise((resolve) => {
     player = new window.YT.Player(el, {
@@ -60,9 +58,3 @@ export function cue(videoId, seconds) {
 
 // Flush the position now (used on visibilitychange / pagehide)
 export const flush = tick;
-
-export const pause = () => player && player.pauseVideo && player.pauseVideo();
-export const play = () => player && player.playVideo && player.playVideo();
-export const info = () => (player && player.getDuration
-  ? { duration: player.getDuration(), position: player.getCurrentTime() }
-  : { duration: 0, position: 0 });
