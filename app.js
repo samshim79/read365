@@ -73,6 +73,32 @@ $('setPos').onclick = () => {
   open(id);
 };
 
+// Lock-screen controls: a silent looping <audio> keeps a media session alive so Android shows play/pause.
+// ponytail: whether the YouTube embed keeps playing with the screen locked is untested; verify on the phone.
+const keepAlive = new Audio('silence.wav');
+keepAlive.loop = true;
+let isPlaying = false;
+
+function syncSession() {
+  $('playPause').textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({ title: videos[indexOf(store.current())].title, artist: 'Read365' });
+  navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+}
+
+function playNow() { keepAlive.play().catch(() => {}); player.play(); }
+function pauseNow() { player.pause(); }
+
+$('playPause').onclick = () => (isPlaying ? pauseNow() : playNow());
+
+if ('mediaSession' in navigator) {
+  const ms = navigator.mediaSession;
+  ms.setActionHandler('play', playNow);
+  ms.setActionHandler('pause', pauseNow);
+  ms.setActionHandler('nexttrack', () => { go(1); playNow(); });
+  ms.setActionHandler('previoustrack', () => { go(-1); playNow(); });
+}
+
 $('navPlayer').onclick = () => show('playerView');
 $('navPlaylist').onclick = () => show('playlistView');
 
@@ -91,6 +117,7 @@ async function start() {
         if (!store.isDone(id)) store.toggleDone(id);
         go(1);
       },
+      onState: (playing) => { isPlaying = playing; if (playing) keepAlive.play().catch(() => {}); syncSession(); },
       onError: (code) => showError(
         code === 100 ? 'This video was removed or is private.' : "This video can't be played in the app.",
         store.current(),

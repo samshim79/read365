@@ -4,6 +4,7 @@ let timer;
 let onTick = () => {};
 let onEnded = () => {};
 let onError = () => {};
+let onState = () => {};
 let resumeAt = 0;
 
 const apiReady = () => new Promise((resolve, reject) => {
@@ -22,6 +23,7 @@ function tick() {
 
 function onStateChange(e) {
   const S = window.YT.PlayerState;
+  onState(e.data === S.PLAYING);
   if (e.data === S.PLAYING) {
     clearInterval(timer);
     timer = setInterval(tick, 5000);
@@ -35,7 +37,7 @@ function onStateChange(e) {
 }
 
 export async function mount(el, handlers) {
-  ({ onTick, onEnded, onError } = handlers);
+  ({ onTick, onEnded, onError, onState } = handlers);
   await apiReady();
   await new Promise((resolve) => {
     player = new window.YT.Player(el, {
@@ -60,3 +62,4 @@ export function cue(videoId, seconds) {
 export const flush = tick;
 
 export const pause = () => player && player.pauseVideo && player.pauseVideo();
+export const play = () => player && player.playVideo && player.playVideo();
