@@ -17,6 +17,7 @@
         <h1 id="where">Loading...</h1>
         <p id="doneCount"></p>
       </header>
+      <div id="passages" class="chips"></div>
       <div class="video"><div id="yt"></div></div>
       <p id="error" role="alert" hidden></p>
       <button id="retry" hidden>Retry</button>
@@ -35,10 +36,16 @@
       <h1>Playlist</h1>
       <ul id="list"></ul>
     </section>
+    <section id="settingsView" hidden>
+      <h1>Settings</h1>
+      <label for="version">Bible version</label>
+      <select id="version"></select>
+    </section>
   </main>
   <nav>
     <button id="navPlayer" class="active">Player</button>
     <button id="navPlaylist">Playlist</button>
+    <button id="navSettings">Settings</button>
   </nav>
   <script type="module" src="app.js"></script>
 </body>

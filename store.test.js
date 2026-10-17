@@ -34,6 +34,14 @@ test('toggleDone twice undoes it', () => {
   assert.equal(store.isDone('a'), false);
 });
 
+test('bible version defaults to NIV and is remembered', () => {
+  store.load('a');
+  assert.equal(store.bibleVersion(), 111);
+  store.setBibleVersion(142);
+  store.load('a');
+  assert.equal(store.bibleVersion(), 142);
+});
+
 test('corrupt storage does not crash', () => {
   mem['read365:v1'] = '{not json';
   store.load('a');

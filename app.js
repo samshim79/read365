@@ -1,6 +1,8 @@
 import videos from './data/videos.js';
 import * as store from './store.js';
 import * as player from './player.js';
+import readings from './data/readings.js';
+import { VERSIONS, passageUrl } from './bible.js';
 import { renderPlaylist } from './views/playlist.js';
 
 const $ = (id) => document.getElementById(id);
@@ -21,9 +23,24 @@ function showError(msg, id) {
   box.hidden = false;
 }
 
+function renderPassages(video) {
+  const box = $('passages');
+  box.replaceChildren();
+  for (const [label, ref] of readings[video.day] || []) {
+    const a = document.createElement('a');
+    a.className = 'chip';
+    a.textContent = label;
+    a.href = passageUrl(ref, store.bibleVersion());
+    a.target = '_blank';
+    a.rel = 'noopener';
+    box.appendChild(a);
+  }
+}
+
 function refresh() {
   const id = store.current();
   const i = indexOf(id);
+  renderPassages(videos[i]);
   $('where').textContent = `${videos[i].title} · ${i + 1} / ${videos.length}`;
   $('prev').disabled = i === 0;
   $('next').disabled = i === videos.length - 1;
@@ -45,9 +62,10 @@ function go(delta) {
 }
 
 function show(view) {
-  for (const v of ['playerView', 'playlistView']) $(v).hidden = v !== view;
+  for (const v of ['playerView', 'playlistView', 'settingsView']) $(v).hidden = v !== view;
   $('navPlayer').classList.toggle('active', view === 'playerView');
   $('navPlaylist').classList.toggle('active', view === 'playlistView');
+  $('navSettings').classList.toggle('active', view === 'settingsView');
   if (view === 'playlistView') renderPlaylist($('list'), videos, store, (id) => { open(id); show('playerView'); });
 }
 
@@ -101,6 +119,10 @@ if ('mediaSession' in navigator) {
 
 $('navPlayer').onclick = () => show('playerView');
 $('navPlaylist').onclick = () => show('playlistView');
+$('navSettings').onclick = () => show('settingsView');
+
+for (const v of VERSIONS) $('version').add(new Option(v.name, v.id, false, v.id === store.bibleVersion()));
+$('version').onchange = (e) => { store.setBibleVersion(Number(e.target.value)); refresh(); };
 
 function flush() { player.flush(); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });

@@ -32,14 +32,16 @@ PWA: plain HTML/CSS/JS, manifest, minimal service worker, installed to the home 
 - Next / previous; mark video done.
 - Installable (manifest + service worker).
 - **Gate (phone test):** installed PWA, Chrome signed into Premium account. Pass = no ads in the embed AND playback continues with screen off.
-- **Gate result (2026-10-17, Galaxy S23):** no ads in the embed; playback stops when the screen locks. Result: fail, so approach B is used for driving. The embed stays for watching with the screen on.
+- **Gate result (2026-10-17, Galaxy S23):** no ads in the embed. A manual screen lock stopped playback at first (the original build); after adding Media Session controls (v3), locking manually and pressing play on the lock screen works. Playback while the screen is on is unaffected; the 15 s auto-lock does not trigger while a video plays in Chrome. Result: pass via lock-screen play. Approach B (open in YouTube app) stays as a backup button.
 - **Fallback (approach B):** if the gate fails, the app is a tracker + launcher that opens the YouTube app at `&t=seconds`; timestamp entered by hand or progress tracked per day only.
 
 ### Phase 2 — YouVersion Bible links
-- Map each day/video to a passage (from the Notion schedules in the playlist description).
-- Open via `youversion://bible?reference=JHN.3` (OSIS abbreviations; chapters and verse ranges).
-- Version switcher: NIV, NASB, KJV, Korean versions.
-- Method (deep link vs. alternatives) tested first, decided in this phase.
+- Map each day/video to its reading (from the Notion schedules in the playlist description): `tools/readings.tsv`.
+- Many days are several passages (Psalms interleaved, Gospel harmonies), so each day shows one tappable chip per passage.
+- Links are `https://www.bible.com/bible/{versionId}/{OSIS ref}`: opens the YouVersion app on Android if installed, else the web reader. (Chosen over the `youversion://` scheme because it carries the version and has a built-in fallback.)
+- Version switcher in Settings: NIV (111), NASB (100), KJV (1), 개역한글 (88), 새번역 (142). 개역개정 is not offered by YouVersion.
+- Passages starting mid-chapter open that verse (or verse range); cross-chapter passages open at the start.
+- Notion lists Day 105 twice; the second entry (삼하 18~19장) is treated as Day 106.
 
 ### Phase 3 — Progress / streak
 - Count of done videos out of 370.

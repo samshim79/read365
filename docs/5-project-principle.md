@@ -38,7 +38,7 @@ On the premise of `PRD.md`, `3-user-scenario.md` and `4-wireframes.md`, this doc
   current: <videoId>,
   positions: { <videoId>: <seconds> },
   done: { <videoId>: <ISO date done> },
-  bibleVersion: "NIV"          // Phase 2
+  bibleVersion: 111            // Phase 2: YouVersion version id (NIV 111, NASB 100, KJV 1, 개역한글 88, 새번역 142)
 }
 ```
 
