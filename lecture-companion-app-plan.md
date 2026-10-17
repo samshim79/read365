@@ -45,7 +45,7 @@ Premium (ad-free, background play while driving) is the priority.
 - **B (fallback if either fails):** app becomes tracker + launcher that opens the YouTube app at `&t=seconds`, where Premium works natively. Timestamp is entered by hand, or progress is tracked per day only.
 - **YouVersion integration:** test-first; decide the method in Phase 2.
 
-**Gate result (2026-10-17, Galaxy S23):** no ads in the embed. Playback first stopped on manual screen lock; after adding Media Session lock-screen controls, locking manually and pressing play on the lock screen works. The 15 s auto-lock does not kick in while a video is playing in Chrome. So A passes via lock-screen play. The "Open in YouTube app" (opens at `&t=` the saved position) and "Set position" buttons stay as a backup.
+**Gate result (2026-10-17, Galaxy S23):** no ads in the embed. Playback first stopped on manual screen lock; after adding Media Session lock-screen controls, locking manually and pressing play on the lock screen works. The 15 s auto-lock does not kick in while a video is playing in Chrome. So A passes via lock-screen play. Approach A is final: the "Open in YouTube app" and "Set position" buttons were removed. Chrome is the supported browser; Samsung Internet's lock-screen play behaves differently.
 
 ## Account / login
 - An app cannot sign into YouTube for the embed. Premium benefits depend on Chrome's own Google sign-in, so the "log in through the app" goal is replaced by the Phase 1 test above.

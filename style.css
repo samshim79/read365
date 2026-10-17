@@ -5,7 +5,6 @@ main { max-width: 640px; margin: 0 auto; padding: 16px 16px 80px; }
 h1 { font-size: 1.25rem; margin: 0; }
 header p { margin: 4px 0 12px; color: var(--muted); }
 button { min-height: 44px; min-width: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: var(--panel); color: var(--fg); font: inherit; }
-.btn { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 8px; background: var(--accent); color: #0f172a; font-weight: 600; text-decoration: none; }
 button:disabled { opacity: .4; }
 button.on, nav .active { background: var(--accent); color: #0f172a; }
 .video { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 8px; overflow: hidden; }
