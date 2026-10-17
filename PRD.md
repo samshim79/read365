@@ -45,8 +45,9 @@ PWA: plain HTML/CSS/JS, manifest, minimal service worker, installed to the home 
 - Notion lists Day 105 twice; the second entry (삼하 18~19장) is treated as Day 106.
 
 ### Phase 3 — Progress / streak
-- Count of done videos out of 370.
-- Consistency over time (streak).
+- Count of done videos out of 370, with a progress bar.
+- Current streak: consecutive days with at least one video marked done, still alive if nothing is done yet today. Days are local calendar days.
+- A 28-day strip showing which days had a video done. Built in `views/progress.js`; streak logic and its test live in `store.js` / `store.test.js`.
 
 ### Phase 4 — Transcripts and translation
 - Korean transcripts via `yt-dlp` subtitle tracks, stored locally.

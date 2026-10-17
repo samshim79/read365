@@ -42,6 +42,20 @@ test('bible version defaults to NIV and is remembered', () => {
   assert.equal(store.bibleVersion(), 142);
 });
 
+test('streak counts consecutive days and survives a not-yet-done today', () => {
+  mem['read365:v1'] = JSON.stringify({ done: { a: '2026-10-10', b: '2026-10-16', c: '2026-10-17', d: '2026-10-17', e: '2026-10-15' } });
+  store.load('a');
+  assert.equal(store.streak('2026-10-17'), 3); // 15, 16, 17
+  assert.equal(store.streak('2026-10-18'), 3); // nothing today yet: streak still alive from yesterday
+  assert.equal(store.streak('2026-10-19'), 0); // a full day missed
+  assert.deepEqual(store.dayCounts()['2026-10-17'], 2);
+});
+
+test('prevDay crosses month and year boundaries', () => {
+  assert.equal(store.prevDay('2026-03-01'), '2026-02-28');
+  assert.equal(store.prevDay('2027-01-01'), '2026-12-31');
+});
+
 test('corrupt storage does not crash', () => {
   mem['read365:v1'] = '{not json';
   store.load('a');

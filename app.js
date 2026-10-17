@@ -4,6 +4,7 @@ import * as player from './player.js';
 import readings from './data/readings.js';
 import { VERSIONS, passageUrl, audioUrl } from './bible.js';
 import { renderPlaylist } from './views/playlist.js';
+import { renderProgress } from './views/progress.js';
 
 const $ = (id) => document.getElementById(id);
 const indexOf = (id) => videos.findIndex((v) => v.id === id);
@@ -84,9 +85,11 @@ function go(delta) {
 }
 
 function show(view) {
-  for (const v of ['playerView', 'playlistView', 'settingsView']) $(v).hidden = v !== view;
+  for (const v of ['playerView', 'playlistView', 'progressView', 'settingsView']) $(v).hidden = v !== view;
   $('navPlayer').classList.toggle('active', view === 'playerView');
   $('navPlaylist').classList.toggle('active', view === 'playlistView');
+  $('navProgress').classList.toggle('active', view === 'progressView');
+  if (view === 'progressView') renderProgress($('progress'), store, videos.length);
   $('navSettings').classList.toggle('active', view === 'settingsView');
   if (view === 'playlistView') renderPlaylist($('list'), videos, store, (id) => { open(id); show('playerView'); }, refresh);
 }
@@ -96,6 +99,7 @@ $('next').onclick = () => go(1);
 $('done').onclick = () => { store.toggleDone(store.current()); refresh(); };
 $('navPlayer').onclick = () => show('playerView');
 $('navPlaylist').onclick = () => show('playlistView');
+$('navProgress').onclick = () => show('progressView');
 $('navSettings').onclick = () => show('settingsView');
 
 for (const v of VERSIONS) $('version').add(new Option(v.name, v.id, false, v.id === store.bibleVersion()));

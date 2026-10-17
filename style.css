@@ -23,6 +23,13 @@ button.on, nav .active { background: var(--accent); color: #000; }
 .chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; max-width: 62%; }
 .chip { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 22px; background: var(--panel); color: var(--accent); text-decoration: none; }
 .chip.active { background: var(--accent); color: #000; }
+.big { margin: 20px 0 8px; font-size: 2rem; font-weight: 700; }
+.muted { margin: 4px 0; color: var(--muted); }
+.track { height: 12px; border-radius: 6px; background: var(--panel); overflow: hidden; }
+.track div { height: 100%; background: var(--accent); }
+.strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 12px; }
+.strip div { aspect-ratio: 1; border-radius: 6px; background: var(--panel); }
+.strip div.on { background: var(--accent); }
 .chip.toggle { justify-content: center; min-width: 44px; padding: 0; }
 label { display: block; margin: 16px 0 8px; color: var(--muted); }
 select { width: 100%; min-height: 44px; padding: 0 10px; border: 0; border-radius: 8px; background: var(--panel); color: var(--fg); font: inherit; }
