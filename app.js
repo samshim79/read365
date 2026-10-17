@@ -85,7 +85,12 @@ function syncSession() {
   navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
 }
 
-function playNow() { keepAlive.play().catch(() => {}); player.play(); }
+function playNow() {
+  keepAlive.play().catch(() => {});
+  player.play();
+  // If the video didn't actually start (blocked in the background), don't leave the silent loop pretending to play
+  setTimeout(() => { if (!isPlaying) { keepAlive.pause(); syncSession(); } }, 3000);
+}
 function pauseNow() { player.pause(); }
 
 $('playPause').onclick = () => (isPlaying ? pauseNow() : playNow());
@@ -120,7 +125,13 @@ async function start() {
         if (!store.isDone(id)) store.toggleDone(id);
         go(1);
       },
-      onState: (playing) => { isPlaying = playing; if (playing) keepAlive.play().catch(() => {}); syncSession(); },
+      onState: (code) => {
+        // YT states: 1 playing, 0 ended, 2 paused, 5 cued. Buffering (3) and unstarted (-1) leave things as they are.
+        if (code === 1) keepAlive.play().catch(() => {});
+        else if (code === 0 || code === 2 || code === 5) keepAlive.pause();
+        if (code === 1 || code === 0 || code === 2 || code === 5) isPlaying = code === 1;
+        syncSession();
+      },
       onError: (code) => showError(
         code === 100 ? 'This video was removed or is private.' : "This video can't be played in the app.",
         store.current(),

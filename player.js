@@ -23,7 +23,7 @@ function tick() {
 
 function onStateChange(e) {
   const S = window.YT.PlayerState;
-  onState(e.data === S.PLAYING);
+  onState(e.data);
   if (e.data === S.PLAYING) {
     clearInterval(timer);
     timer = setInterval(tick, 5000);
