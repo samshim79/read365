@@ -2,7 +2,7 @@ import videos from './data/videos.js';
 import * as store from './store.js';
 import * as player from './player.js';
 import readings from './data/readings.js';
-import { VERSIONS, passageUrl } from './bible.js';
+import { VERSIONS, passageUrl, audioUrl } from './bible.js';
 import { renderPlaylist } from './views/playlist.js';
 
 const $ = (id) => document.getElementById(id);
@@ -26,6 +26,7 @@ function showError(msg, id) {
 // Chips pick which passage the Bible pane shows; the first passage of a new video loads automatically.
 let shownVideo = null;
 let shownIdx = 0;
+let listening = false; // Listen swaps the pane to bible.com's audio page so playback stays inside the app
 
 function renderPassages(video) {
   if (shownVideo !== video.id) { shownVideo = video.id; shownIdx = 0; }
@@ -41,9 +42,17 @@ function renderPassages(video) {
     a.onclick = (e) => { e.preventDefault(); shownIdx = i; renderPassages(video); };
     box.appendChild(a);
   });
+  if (list.length) {
+    const toggle = document.createElement('a');
+    toggle.className = 'chip toggle' + (listening ? ' active' : '');
+    toggle.textContent = listening ? '📖 Read' : '🔊 Listen';
+    toggle.href = '#';
+    toggle.onclick = (e) => { e.preventDefault(); listening = !listening; renderPassages(video); };
+    box.appendChild(toggle);
+  }
   frame.hidden = !list.length;
   if (list.length) {
-    const url = passageUrl(list[shownIdx][1], store.bibleVersion());
+    const url = (listening ? audioUrl : passageUrl)(list[shownIdx][1], store.bibleVersion());
     if (frame.src !== url) frame.src = url;
   }
 }

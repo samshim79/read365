@@ -1,5 +1,5 @@
 // App-shell cache only. Bump CACHE on each release. The YouTube player is never cached.
-const CACHE = 'read365-v12';
+const CACHE = 'read365-v14';
 const SHELL = [
   'bible.js', 'data/readings.js',
   './', 'index.html', 'app.js', 'store.js', 'player.js', 'style.css',
@@ -8,7 +8,8 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: 'reload' bypasses the HTTP cache so a new version never stores stale files
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {

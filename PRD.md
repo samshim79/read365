@@ -40,6 +40,7 @@ PWA: plain HTML/CSS/JS, manifest, minimal service worker, installed to the home 
 - Many days are several passages (Psalms interleaved, Gospel harmonies), so each day shows one tappable chip per passage.
 - Links are `https://www.bible.com/bible/{versionId}/{OSIS ref}`: opens the YouVersion app on Android if installed, else the web reader. (Chosen over the `youversion://` scheme because it carries the version and has a built-in fallback.)
 - Version switcher in Settings: NIV (111), NASB (100), KJV (1), 개역한글 (88), 새번역 (142). 개역개정 is not offered by YouVersion.
+- The Player screen embeds the bible.com reader in its lower half; a Listen/Read toggle swaps it to bible.com's audio page so audio plays without leaving the app. Audio exists for NIV, NASB, KJV and 현대인의성경 (86); not 개역한글 or 새번역.
 - Passages starting mid-chapter open that verse (or verse range); cross-chapter passages open at the start.
 - Notion lists Day 105 twice; the second entry (삼하 18~19장) is treated as Day 106.
 
