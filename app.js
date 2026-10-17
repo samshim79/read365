@@ -45,12 +45,13 @@ function renderPassages(video) {
   if (list.length) {
     const toggle = document.createElement('a');
     toggle.className = 'chip toggle' + (listening ? ' active' : '');
-    toggle.textContent = listening ? '📖 Read' : '🔊 Listen';
+    toggle.textContent = listening ? '📖' : '🔊';
+    toggle.setAttribute('aria-label', listening ? 'Read' : 'Listen');
     toggle.href = '#';
     toggle.onclick = (e) => { e.preventDefault(); listening = !listening; renderPassages(video); };
     box.appendChild(toggle);
   }
-  frame.hidden = !list.length;
+  $('bibleWrap').hidden = !list.length;
   if (list.length) {
     const url = (listening ? audioUrl : passageUrl)(list[shownIdx][1], store.bibleVersion());
     if (frame.src !== url) frame.src = url;
