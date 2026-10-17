@@ -77,7 +77,7 @@ function show(view) {
   $('navPlayer').classList.toggle('active', view === 'playerView');
   $('navPlaylist').classList.toggle('active', view === 'playlistView');
   $('navSettings').classList.toggle('active', view === 'settingsView');
-  if (view === 'playlistView') renderPlaylist($('list'), videos, store, (id) => { open(id); show('playerView'); });
+  if (view === 'playlistView') renderPlaylist($('list'), videos, store, (id) => { open(id); show('playerView'); }, refresh);
 }
 
 $('prev').onclick = () => go(-1);

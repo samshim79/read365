@@ -1,7 +1,7 @@
 // S2: scrolling list of all videos. Tap a row to open it; tap the mark to toggle done.
 const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
-export function renderPlaylist(root, videos, store, onPick) {
+export function renderPlaylist(root, videos, store, onPick, onToggle) {
   root.replaceChildren();
   videos.forEach((v, i) => {
     const row = document.createElement('li');
@@ -9,7 +9,7 @@ export function renderPlaylist(root, videos, store, onPick) {
     mark.className = 'mark';
     mark.setAttribute('aria-label', 'Toggle done');
     mark.textContent = store.isDone(v.id) ? '✔' : '○';
-    mark.onclick = () => { store.toggleDone(v.id); mark.textContent = store.isDone(v.id) ? '✔' : '○'; };
+    mark.onclick = () => { store.toggleDone(v.id); mark.textContent = store.isDone(v.id) ? '✔' : '○'; onToggle(); };
 
     const label = document.createElement('button');
     label.className = 'label' + (v.id === store.current() ? ' current' : '');
