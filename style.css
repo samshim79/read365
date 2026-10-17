@@ -17,6 +17,8 @@ button.on, nav .active { background: var(--accent); color: #0f172a; }
    than the visible window so those fall in the clipped part */
 #bibleWrap { flex: 1; min-height: 200px; position: relative; overflow: hidden; border-radius: 8px; background: #fff; }
 #bible { position: absolute; top: 0; left: 0; width: 100%; height: calc(100% + 340px); border: 0; }
+/* Listen: slide bible.com's 72px "Bible App" header off the top so the play button is in view without scrolling */
+#bibleWrap.listen #bible { top: -72px; height: calc(100% + 412px); }
 .chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; max-width: 62%; }
 .chip { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 22px; background: var(--panel); color: var(--accent); text-decoration: none; }
 .chip.active { background: var(--accent); color: #0f172a; }

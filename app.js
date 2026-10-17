@@ -52,6 +52,7 @@ function renderPassages(video) {
     box.appendChild(toggle);
   }
   $('bibleWrap').hidden = !list.length;
+  $('bibleWrap').classList.toggle('listen', listening);
   if (list.length) {
     const url = (listening ? audioUrl : passageUrl)(list[shownIdx][1], store.bibleVersion());
     if (frame.src !== url) frame.src = url;
