@@ -85,6 +85,16 @@ function syncSession() {
   navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
 }
 
+// Without this the lock screen shows the 1-second silent file's progress, looping
+function updatePosition() {
+  if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
+  const { duration, position } = player.info();
+  if (!(duration > 0)) return;
+  try {
+    navigator.mediaSession.setPositionState({ duration, position: Math.min(position, duration), playbackRate: 1 });
+  } catch { /* invalid state: skip */ }
+}
+
 function playNow() {
   keepAlive.play().catch(() => {});
   player.play();
@@ -118,7 +128,7 @@ async function start() {
   $('retry').hidden = true;
   try {
     await player.mount($('yt'), {
-      onTick: (t) => store.savePosition(store.current(), t),
+      onTick: (t) => { store.savePosition(store.current(), t); updatePosition(); },
       onEnded: () => {
         const id = store.current();
         store.savePosition(id, 0);
@@ -131,6 +141,7 @@ async function start() {
         else if (code === 0 || code === 2 || code === 5) keepAlive.pause();
         if (code === 1 || code === 0 || code === 2 || code === 5) isPlaying = code === 1;
         syncSession();
+        updatePosition();
       },
       onError: (code) => showError(
         code === 100 ? 'This video was removed or is private.' : "This video can't be played in the app.",

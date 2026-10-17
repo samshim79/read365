@@ -63,3 +63,6 @@ export const flush = tick;
 
 export const pause = () => player && player.pauseVideo && player.pauseVideo();
 export const play = () => player && player.playVideo && player.playVideo();
+export const info = () => (player && player.getDuration
+  ? { duration: player.getDuration(), position: player.getCurrentTime() }
+  : { duration: 0, position: 0 });
