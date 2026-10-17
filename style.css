@@ -1,4 +1,4 @@
-:root { color-scheme: dark; --bg: #000; --panel: #1c1c1e; --fg: #f1f5f9; --muted: #94a3b8; --accent: #38bdf8; }
+:root { color-scheme: dark; --bg: #121212; --panel: #232121; /* bible.com's dark page and card colors */ --fg: #f1f5f9; --muted: #94a3b8; --accent: #38bdf8; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.4 system-ui, sans-serif; }
 main { max-width: 640px; margin: 0 auto; padding: 16px 16px 80px; }
@@ -15,7 +15,7 @@ button.on, nav .active { background: var(--accent); color: #000; }
 #playerView:not([hidden]) { display: flex; flex-direction: column; height: calc(100dvh - 96px); }
 /* bible.com pins its cookie banner and bottom menu near the bottom of the frame; the frame is made taller
    than the visible window so those fall in the clipped part */
-#bibleWrap { flex: 1; min-height: 200px; position: relative; overflow: hidden; border-radius: 8px; background: #000; }
+#bibleWrap { flex: 1; min-height: 200px; position: relative; overflow: hidden; border-radius: 8px; background: var(--bg); }
 #bible { position: absolute; top: 0; left: 0; width: 100%; height: calc(100% + 340px); border: 0; }
 /* Listen: slide bible.com's "Bible App" header (and the gap under it) off the top so the play button is in view without scrolling */
 #bibleWrap.listen #bible { top: -104px; height: calc(100% + 444px); }
@@ -25,8 +25,8 @@ button.on, nav .active { background: var(--accent); color: #000; }
 .chip.toggle { justify-content: center; min-width: 44px; padding: 0; }
 label { display: block; margin: 16px 0 8px; color: var(--muted); }
 select { width: 100%; min-height: 44px; padding: 0 10px; border: 0; border-radius: 8px; background: var(--panel); color: var(--fg); font: inherit; }
-.controls { display: flex; gap: 8px; margin-top: 12px; }
-.controls button { flex: 1; }
+.controls { display: flex; gap: 8px; margin: 8px 0; } /* equal 8px gap above (video) and below (Bible pane) */
+.controls button { flex: 1; min-height: 34px; }
 #error { background: #7f1d1d; padding: 10px 12px; border-radius: 8px; }
 #error a { color: #fff; font-weight: 600; }
 ul { list-style: none; margin: 12px 0 0; padding: 0; }
