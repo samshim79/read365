@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1e293b">
+  <title>Read365</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <section id="playerView">
+      <header>
+        <h1 id="where">Loading...</h1>
+        <p id="doneCount"></p>
+      </header>
+      <div class="video"><div id="yt"></div></div>
+      <p id="error" role="alert" hidden></p>
+      <button id="retry" hidden>Retry</button>
+      <div class="controls">
+        <button id="prev">◀ Prev</button>
+        <button id="done">Mark done</button>
+        <button id="next">Next ▶</button>
+      </div>
+    </section>
+    <section id="playlistView" hidden>
+      <h1>Playlist</h1>
+      <ul id="list"></ul>
+    </section>
+  </main>
+  <nav>
+    <button id="navPlayer" class="active">Player</button>
+    <button id="navPlaylist">Playlist</button>
+  </nav>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

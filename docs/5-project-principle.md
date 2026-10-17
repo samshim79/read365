@@ -35,7 +35,7 @@ On the premise of `PRD.md`, `3-user-scenario.md` and `4-wireframes.md`, this doc
 
 ```
 {
-  current: <videoIndex>,
+  current: <videoId>,
   positions: { <videoId>: <seconds> },
   done: { <videoId>: <ISO date done> },
   bibleVersion: "NIV"          // Phase 2

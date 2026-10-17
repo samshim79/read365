@@ -58,8 +58,8 @@ Premium (ad-free, background play while driving) is the priority.
 - Find a reference app whose look I like, then do a dedicated UI and accessibility session.
 
 ## Next steps
-- Pull the exact list of 370 video IDs and titles; check the extra 5 videos.
-- Build Phase 1; run the Premium / screen-off test on the phone.
+- ~~Pull the exact list of 370 video IDs and titles; check the extra 5 videos.~~ Done 2026-10-17 (`tools/playlist.tsv`, `tools/build-videos.py`). Playlist order is scrambled (e.g. Days 360-365 sit near position 186), so the app orders by day number. Extras (5, listed after Day 365): 2 intro lectures "365 성경읽기 OT 1강/2강", 2 untitled-day talks ("My Bible, Crumbling Like a Cracker", "A Bible that is difficult to read"), and a duplicate Day 222 upload.
+- Phase 1 built; deploy to GitHub Pages and run the Premium / screen-off test on the phone.
 - Fetch the Notion reading schedules and map days to YouVersion references (before Phase 2).
 - UI design session (before or during Phase 1, keep it simple).
 - Transcription and translation pipeline (Phase 4).
