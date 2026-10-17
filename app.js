@@ -79,7 +79,6 @@ keepAlive.loop = true;
 let isPlaying = false;
 
 function syncSession() {
-  $('playPause').textContent = isPlaying ? '⏸ Pause' : '▶ Play';
   if (!('mediaSession' in navigator)) return;
   navigator.mediaSession.metadata = new MediaMetadata({ title: videos[indexOf(store.current())].title, artist: 'Read365' });
   navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
@@ -102,8 +101,6 @@ function playNow() {
   setTimeout(() => { if (!isPlaying) { keepAlive.pause(); syncSession(); } }, 3000);
 }
 function pauseNow() { player.pause(); }
-
-$('playPause').onclick = () => (isPlaying ? pauseNow() : playNow());
 
 if ('mediaSession' in navigator) {
   const ms = navigator.mediaSession;
