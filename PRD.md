@@ -32,6 +32,7 @@ PWA: plain HTML/CSS/JS, manifest, minimal service worker, installed to the home 
 - Next / previous; mark video done.
 - Installable (manifest + service worker).
 - **Gate (phone test):** installed PWA, Chrome signed into Premium account. Pass = no ads in the embed AND playback continues with screen off.
+- **Gate result (2026-10-17, Galaxy S23):** no ads in the embed; playback stops when the screen locks. Result: fail, so approach B is used for driving. The embed stays for watching with the screen on.
 - **Fallback (approach B):** if the gate fails, the app is a tracker + launcher that opens the YouTube app at `&t=seconds`; timestamp entered by hand or progress tracked per day only.
 
 ### Phase 2 — YouVersion Bible links

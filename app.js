@@ -54,6 +54,25 @@ function show(view) {
 $('prev').onclick = () => go(-1);
 $('next').onclick = () => go(1);
 $('done').onclick = () => { store.toggleDone(store.current()); refresh(); };
+// Approach B: hand off to the YouTube app (Premium background play) at the saved position
+$('ytOpen').onclick = () => {
+  player.flush();
+  player.pause();
+  const id = store.current();
+  $('ytOpen').href = `https://www.youtube.com/watch?v=${id}&t=${store.position(id)}s`;
+};
+
+// Accepts "m:ss", "h:mm:ss" or plain seconds
+$('setPos').onclick = () => {
+  const id = store.current();
+  const raw = prompt('Stopped at (m:ss)', '');
+  if (!raw) return;
+  const seconds = raw.split(':').reduce((t, n) => t * 60 + Number(n), 0);
+  if (!Number.isFinite(seconds) || seconds < 0) return showError('Enter the time like 12:34.');
+  store.savePosition(id, seconds);
+  open(id);
+};
+
 $('navPlayer').onclick = () => show('playerView');
 $('navPlaylist').onclick = () => show('playlistView');
 

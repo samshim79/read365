@@ -58,3 +58,5 @@ export function cue(videoId, seconds) {
 
 // Flush the position now (used on visibilitychange / pagehide)
 export const flush = tick;
+
+export const pause = () => player && player.pauseVideo && player.pauseVideo();
