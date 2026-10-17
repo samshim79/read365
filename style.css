@@ -12,7 +12,8 @@ button.on, nav .active { background: var(--accent); color: #000; }
 .video { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 8px; overflow: hidden; }
 .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; }
 /* Player screen: lecture on top, Bible reader fills the lower half */
-#playerView:not([hidden]) { display: flex; flex-direction: column; height: calc(100dvh - 96px); }
+/* 16px top padding + 60px nav + 8px gap above the nav */
+#playerView:not([hidden]) { display: flex; flex-direction: column; height: calc(100dvh - 84px); }
 /* bible.com pins its cookie banner and bottom menu near the bottom of the frame; the frame is made taller
    than the visible window so those fall in the clipped part */
 #bibleWrap { flex: 1; min-height: 200px; position: relative; overflow: hidden; border-radius: 8px; background: var(--bg); }
