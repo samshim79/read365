@@ -26,7 +26,7 @@ function showError(msg, id) {
 // Chips pick which passage the Bible pane shows; the first passage of a new video loads automatically.
 let shownVideo = null;
 let shownIdx = 0;
-let listening = false; // Listen swaps the pane to bible.com's audio page so playback stays inside the app
+let listening = true; // Listen (the default) swaps the pane to bible.com's audio page so playback stays inside the app
 
 function renderPassages(video) {
   if (shownVideo !== video.id) { shownVideo = video.id; shownIdx = 0; }
