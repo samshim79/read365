@@ -23,17 +23,28 @@ function showError(msg, id) {
   box.hidden = false;
 }
 
+// Chips pick which passage the Bible pane shows; the first passage of a new video loads automatically.
+let shownVideo = null;
+let shownIdx = 0;
+
 function renderPassages(video) {
+  if (shownVideo !== video.id) { shownVideo = video.id; shownIdx = 0; }
   const box = $('passages');
+  const frame = $('bible');
+  const list = readings[video.day] || [];
   box.replaceChildren();
-  for (const [label, ref] of readings[video.day] || []) {
+  list.forEach(([label, ref], i) => {
     const a = document.createElement('a');
-    a.className = 'chip';
+    a.className = 'chip' + (i === shownIdx ? ' active' : '');
     a.textContent = label;
-    a.href = passageUrl(ref, store.bibleVersion());
-    a.target = '_blank';
-    a.rel = 'noopener';
+    a.href = passageUrl(ref, store.bibleVersion()); // fallback: opens in a new tab if scripting fails
+    a.onclick = (e) => { e.preventDefault(); shownIdx = i; renderPassages(video); };
     box.appendChild(a);
+  });
+  frame.hidden = !list.length;
+  if (list.length) {
+    const url = passageUrl(list[shownIdx][1], store.bibleVersion());
+    if (frame.src !== url) frame.src = url;
   }
 }
 
