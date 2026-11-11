@@ -10,8 +10,10 @@ let lang = 'en-US';
 let token = 0;     // bumped on every new passage and every stop; older speech/fetch callbacks see a stale token and quit
 let playing = false;
 let onState = () => {};
+let beforeSpeak = () => {};
 
 export function setStateListener(fn) { onState = fn; }
+export function setBeforeSpeak(fn) { beforeSpeak = fn; } // runs when read-aloud starts, e.g. to pause the lecture
 export const isPlaying = () => playing;
 
 function setPlaying(v) { if (playing !== v) { playing = v; onState(v); } }
@@ -57,7 +59,7 @@ export async function show(opts) {
     verses = list;
     box.replaceChildren();
     let lastChapter = null;
-    nodes = list.map((v) => {
+    nodes = list.map((v, i) => {
       if (v.chapter !== lastChapter) {
         lastChapter = v.chapter;
         const h = document.createElement('h3');
@@ -69,6 +71,7 @@ export async function show(opts) {
       const n = document.createElement('sup');
       n.textContent = v.verse;
       p.append(n, ' ', v.text);
+      if (canSpeak) p.onclick = () => speak(i); // tap a verse to read from there
       box.appendChild(p);
       return p;
     });
@@ -83,6 +86,7 @@ export async function show(opts) {
 // Read verse by verse (short utterances are more reliable on Android than one long one).
 export function speak(from = 0) {
   if (!canSpeak || !verses.length) return;
+  beforeSpeak();
   stop();
   const mine = token;
   setPlaying(true);
