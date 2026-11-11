@@ -128,6 +128,31 @@ function renderPassages(video) {
   }
 }
 
+// The lecture ended: open the day's first passage in the YouVersion app, as if ↗ was tapped. False if the day has no reading.
+// The app stays on this lecture so the other passage chips are still there on return.
+function openBibleApp(video) {
+  const list = readings[video.day] || [];
+  if (!list.length) return false;
+  shownIdx = 0;
+  renderPassages(video);
+  const url = passageUrl(list[0][1], store.bibleVersion());
+  // Browsers may block a new window that wasn't opened by a tap (and nothing opens while the screen is locked):
+  // then show a one-tap link instead.
+  const win = window.open(url, '_blank');
+  if (win) { win.opener = null; return true; }
+  const box = $('notice');
+  const link = document.createElement('a');
+  link.href = url;
+  link.target = '_blank';
+  link.rel = 'noopener';
+  link.textContent = `Open ${list[0][0]} in the Bible app ↗`;
+  link.onclick = () => { box.hidden = true; };
+  box.replaceChildren(link);
+  box.hidden = false;
+  return true;
+}
+
+// Parked: reading the day's passages aloud when the lecture ends (replaced for now by openBibleApp).
 // The lecture ended: read all of today's passages aloud from the first one. False if there is nothing to read.
 function readDay(video) {
   const list = readings[video.day] || [];
@@ -158,6 +183,7 @@ function open(id) {
   advanceAfterReading = false;
   store.setCurrent(id);
   $('error').hidden = true;
+  $('notice').hidden = true;
   player.cue(id, store.position(id));
   refresh();
 }
@@ -202,7 +228,7 @@ async function start() {
         store.savePosition(id, 0);
         if (!store.isDone(id)) store.toggleDone(id);
         refresh();
-        if (!readDay(videos[indexOf(id)])) go(1);
+        if (!openBibleApp(videos[indexOf(id)])) go(1);
       },
       onError: (code) => showError(
         code === 100 ? 'This video was removed or is private.' : "This video can't be played in the app.",
