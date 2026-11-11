@@ -20,7 +20,10 @@ button.on, nav .active { background: var(--accent); color: #000; }
 #reader .verse { margin: 0 0 6px; padding: 2px 4px; border-radius: 6px; cursor: pointer; }
 #reader .verse sup { color: var(--accent); font-size: 0.7em; }
 #reader .verse.now { background: #2f3b4a; }
-.chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; max-width: 62%; }
+.chips { display: flex; flex-wrap: nowrap; gap: 6px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chips:empty { display: none; }
+.tools { display: flex; gap: 6px; flex: none; }
 .chip { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 22px; background: var(--panel); color: var(--accent); text-decoration: none; }
 .chip.active { background: var(--accent); color: #000; }
 .big { margin: 20px 0 8px; font-size: 2rem; font-weight: 700; }
