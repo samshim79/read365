@@ -2,7 +2,7 @@ import videos from './data/videos.js';
 import * as store from './store.js';
 import * as player from './player.js';
 import readings from './data/readings.js';
-import { VERSIONS, versionById, passageUrl } from './bible.js';
+import { VERSIONS, versionById, passageUrl, passageAudio } from './bible.js';
 import * as reader from './reader.js';
 import { renderPlaylist } from './views/playlist.js';
 import { renderProgress } from './views/progress.js';
@@ -70,8 +70,9 @@ function renderPassages(video) {
   if (active) active.scrollIntoView({ block: 'nearest', inline: 'center' });
   $('bibleWrap').hidden = !list.length;
   if (!list.length) { reader.stop(); loadedKey = null; return; }
-  const [, ref, endChapter, endVerse] = list[shownIdx];
-  if (reader.canSpeak && version.bolls) {
+  const [label, ref, endChapter, endVerse] = list[shownIdx];
+  const tracks = version.audio ? passageAudio(ref, endChapter) : []; // recorded audio plays on the lock screen; text-to-speech doesn't
+  if (tracks.length || (reader.canSpeak && version.bolls)) {
     speakChip = document.createElement('a');
     speakChip.className = 'chip toggle';
     speakChip.href = '#';
@@ -96,7 +97,7 @@ function renderPassages(video) {
     loadedKey = key;
     const resume = autoSpeak;
     autoSpeak = false;
-    reader.show({ el: $('reader'), bolls: version.bolls, ref, endChapter, endVerse, lang: version.lang, fallbackUrl: passageUrl(ref, version.id) })
+    reader.show({ el: $('reader'), bolls: version.bolls, ref, endChapter, endVerse, lang: version.lang, fallbackUrl: passageUrl(ref, version.id), tracks, title: label })
       .then((ok) => {
         if (ok) { if (resume) reader.speak(0); }
         else if (advanceAfterReading) { advanceAfterReading = false; go(1); } // the text didn't load: move on as before
@@ -107,7 +108,8 @@ function renderPassages(video) {
 // The lecture ended: read all of today's passages aloud from the first one. False if there is nothing to read.
 function readDay(video) {
   const list = readings[video.day] || [];
-  if (!list.length || !reader.canSpeak || !versionById(store.bibleVersion()).bolls) return false;
+  const version = versionById(store.bibleVersion());
+  if (!list.length || !(version.audio || (reader.canSpeak && version.bolls))) return false;
   advanceAfterReading = true;
   autoSpeak = true;
   shownIdx = 0;
