@@ -30,6 +30,7 @@ let shownVideo = null;
 let shownIdx = 0;
 let loadedKey = null; // what the pane currently shows, so unrelated refreshes (Mark done) don't reload it or stop read-aloud
 let speakChip = null;
+let autoSpeak = false; // set when read-aloud moves on to the next passage by itself, so it keeps reading once that text loads
 
 function paintSpeakChip() {
   if (!speakChip) return;
@@ -40,6 +41,11 @@ function paintSpeakChip() {
 }
 reader.setStateListener(paintSpeakChip);
 reader.setBeforeSpeak(() => player.pause()); // don't talk over the lecture
+// A day can have several passages (e.g. day 288 has four): when one finishes, carry on with the next chip.
+reader.setFinishedListener(() => {
+  const video = videos[indexOf(store.current())];
+  if (shownIdx < (readings[video.day] || []).length - 1) { shownIdx++; autoSpeak = true; renderPassages(video); }
+});
 
 function renderPassages(video) {
   if (shownVideo !== video.id) { shownVideo = video.id; shownIdx = 0; }
@@ -81,7 +87,10 @@ function renderPassages(video) {
   const key = `${video.id}|${shownIdx}|${version.id}`;
   if (key !== loadedKey) {
     loadedKey = key;
-    reader.show({ el: $('reader'), bolls: version.bolls, ref, endChapter, endVerse, lang: version.lang, fallbackUrl: passageUrl(ref, version.id) });
+    const resume = autoSpeak;
+    autoSpeak = false;
+    reader.show({ el: $('reader'), bolls: version.bolls, ref, endChapter, endVerse, lang: version.lang, fallbackUrl: passageUrl(ref, version.id) })
+      .then((ok) => { if (ok && resume) reader.speak(0); });
   }
 }
 
