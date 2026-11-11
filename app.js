@@ -30,6 +30,7 @@ let shownVideo = null;
 let shownIdx = 0;
 let loadedKey = null; // what the pane currently shows, so unrelated refreshes (Mark done) don't reload it or stop read-aloud
 let speakChip = null;
+let advanceAfterReading = false; // set when the lecture ends: read the day's passages, then move on to the next lecture
 let autoSpeak = false; // set when read-aloud moves on to the next passage by itself, so it keeps reading once that text loads
 
 function paintSpeakChip() {
@@ -45,6 +46,7 @@ reader.setBeforeSpeak(() => player.pause()); // don't talk over the lecture
 reader.setFinishedListener(() => {
   const video = videos[indexOf(store.current())];
   if (shownIdx < (readings[video.day] || []).length - 1) { shownIdx++; autoSpeak = true; renderPassages(video); }
+  else if (advanceAfterReading) { advanceAfterReading = false; go(1); }
 });
 
 function renderPassages(video) {
@@ -59,7 +61,7 @@ function renderPassages(video) {
     a.className = 'chip' + (i === shownIdx ? ' active' : '');
     a.textContent = label;
     a.href = passageUrl(ref, version.id); // fallback: opens YouVersion in a new tab if scripting fails
-    a.onclick = (e) => { e.preventDefault(); shownIdx = i; renderPassages(video); };
+    a.onclick = (e) => { e.preventDefault(); advanceAfterReading = false; shownIdx = i; renderPassages(video); };
     box.appendChild(a);
   });
   $('bibleWrap').hidden = !list.length;
@@ -71,6 +73,7 @@ function renderPassages(video) {
     speakChip.href = '#';
     speakChip.onclick = (e) => {
       e.preventDefault();
+      if (reader.isPlaying()) advanceAfterReading = false; // stopped by hand: stay on this lecture
       reader.toggle();
     };
     box.appendChild(speakChip);
@@ -90,8 +93,23 @@ function renderPassages(video) {
     const resume = autoSpeak;
     autoSpeak = false;
     reader.show({ el: $('reader'), bolls: version.bolls, ref, endChapter, endVerse, lang: version.lang, fallbackUrl: passageUrl(ref, version.id) })
-      .then((ok) => { if (ok && resume) reader.speak(0); });
+      .then((ok) => {
+        if (ok) { if (resume) reader.speak(0); }
+        else if (advanceAfterReading) { advanceAfterReading = false; go(1); } // the text didn't load: move on as before
+      });
   }
+}
+
+// The lecture ended: read all of today's passages aloud from the first one. False if there is nothing to read.
+function readDay(video) {
+  const list = readings[video.day] || [];
+  if (!list.length || !reader.canSpeak || !versionById(store.bibleVersion()).bolls) return false;
+  advanceAfterReading = true;
+  autoSpeak = true;
+  shownIdx = 0;
+  loadedKey = null; // reload so the first passage starts from the top
+  renderPassages(video);
+  return true;
 }
 
 function refresh() {
@@ -107,6 +125,7 @@ function refresh() {
 }
 
 function open(id) {
+  advanceAfterReading = false;
   store.setCurrent(id);
   $('error').hidden = true;
   player.cue(id, store.position(id));
@@ -152,7 +171,8 @@ async function start() {
         const id = store.current();
         store.savePosition(id, 0);
         if (!store.isDone(id)) store.toggleDone(id);
-        go(1);
+        refresh();
+        if (!readDay(videos[indexOf(id)])) go(1);
       },
       onError: (code) => showError(
         code === 100 ? 'This video was removed or is private.' : "This video can't be played in the app.",
