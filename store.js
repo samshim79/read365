@@ -1,6 +1,6 @@
 // State + persistence. Everything lives under one versioned localStorage key.
 const KEY = 'read365:v1';
-const fresh = () => ({ current: null, positions: {}, done: {}, bibleVersion: 111 });
+const fresh = () => ({ current: null, positions: {}, done: {}, bibleVersion: 111, listen: false });
 let s = fresh();
 
 function persist() {
@@ -22,6 +22,9 @@ export const isDone = (id) => id in s.done;
 export const doneCount = () => Object.keys(s.done).length;
 export const bibleVersion = () => s.bibleVersion;
 export function setBibleVersion(id) { s.bibleVersion = id; persist(); }
+// Listen mode: the Bible pane shows YouVersion's narrated audio page instead of the in-app text
+export const listen = () => !!s.listen;
+export function setListen(on) { s.listen = !!on; persist(); }
 
 export function setCurrent(id) { s.current = id; persist(); }
 export function savePosition(id, seconds) { s.positions[id] = Math.floor(seconds); persist(); }
