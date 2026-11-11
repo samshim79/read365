@@ -2,7 +2,8 @@ import videos from './data/videos.js';
 import * as store from './store.js';
 import * as player from './player.js';
 import readings from './data/readings.js';
-import { VERSIONS, passageUrl, audioUrl } from './bible.js';
+import { VERSIONS, versionById, passageUrl } from './bible.js';
+import * as reader from './reader.js';
 import { renderPlaylist } from './views/playlist.js';
 import { renderProgress } from './views/progress.js';
 
@@ -27,36 +28,60 @@ function showError(msg, id) {
 // Chips pick which passage the Bible pane shows; the first passage of a new video loads automatically.
 let shownVideo = null;
 let shownIdx = 0;
-let listening = true; // Listen (the default) swaps the pane to bible.com's audio page so playback stays inside the app
+let loadedKey = null; // what the pane currently shows, so unrelated refreshes (Mark done) don't reload it or stop read-aloud
+let speakChip = null;
+
+function paintSpeakChip() {
+  if (!speakChip) return;
+  const on = reader.isPlaying();
+  speakChip.textContent = on ? '⏹' : '🔊';
+  speakChip.setAttribute('aria-label', on ? 'Stop reading' : 'Read aloud');
+  speakChip.classList.toggle('active', on);
+}
+reader.setStateListener(paintSpeakChip);
 
 function renderPassages(video) {
   if (shownVideo !== video.id) { shownVideo = video.id; shownIdx = 0; }
   const box = $('passages');
-  const frame = $('bible');
   const list = readings[video.day] || [];
+  const version = versionById(store.bibleVersion());
   box.replaceChildren();
+  speakChip = null;
   list.forEach(([label, ref], i) => {
     const a = document.createElement('a');
     a.className = 'chip' + (i === shownIdx ? ' active' : '');
     a.textContent = label;
-    a.href = passageUrl(ref, store.bibleVersion()); // fallback: opens in a new tab if scripting fails
+    a.href = passageUrl(ref, version.id); // fallback: opens YouVersion in a new tab if scripting fails
     a.onclick = (e) => { e.preventDefault(); shownIdx = i; renderPassages(video); };
     box.appendChild(a);
   });
-  if (list.length) {
-    const toggle = document.createElement('a');
-    toggle.className = 'chip toggle' + (listening ? ' active' : '');
-    toggle.textContent = listening ? '📖' : '🔊';
-    toggle.setAttribute('aria-label', listening ? 'Read' : 'Listen');
-    toggle.href = '#';
-    toggle.onclick = (e) => { e.preventDefault(); listening = !listening; renderPassages(video); };
-    box.appendChild(toggle);
-  }
   $('bibleWrap').hidden = !list.length;
-  $('bibleWrap').classList.toggle('listen', listening);
-  if (list.length) {
-    const url = (listening ? audioUrl : passageUrl)(list[shownIdx][1], store.bibleVersion());
-    if (frame.src !== url) frame.src = url;
+  if (!list.length) { reader.stop(); loadedKey = null; return; }
+  const [, ref, endChapter, endVerse] = list[shownIdx];
+  if (reader.canSpeak && version.bolls) {
+    speakChip = document.createElement('a');
+    speakChip.className = 'chip toggle';
+    speakChip.href = '#';
+    speakChip.onclick = (e) => {
+      e.preventDefault();
+      if (!reader.isPlaying()) player.pause(); // don't talk over the lecture
+      reader.toggle();
+    };
+    box.appendChild(speakChip);
+    paintSpeakChip();
+  }
+  const yv = document.createElement('a');
+  yv.className = 'chip';
+  yv.textContent = '↗';
+  yv.setAttribute('aria-label', 'Open in YouVersion');
+  yv.href = passageUrl(ref, version.id);
+  yv.target = '_blank';
+  yv.rel = 'noopener';
+  box.appendChild(yv);
+  const key = `${video.id}|${shownIdx}|${version.id}`;
+  if (key !== loadedKey) {
+    loadedKey = key;
+    reader.show({ el: $('reader'), bolls: version.bolls, ref, endChapter, endVerse, lang: version.lang, fallbackUrl: passageUrl(ref, version.id) });
   }
 }
 

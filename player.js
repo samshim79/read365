@@ -56,5 +56,8 @@ export function cue(videoId, seconds) {
   player.cueVideoById({ videoId, startSeconds: seconds });
 }
 
+// Pause the lecture (used when read-aloud starts); the PAUSED state change saves the position
+export function pause() { if (player && player.getPlayerState && player.getPlayerState() === 1) player.pauseVideo(); }
+
 // Flush the position now (used on visibilitychange / pagehide)
 export const flush = tick;
