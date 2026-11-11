@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert';
 import readings from './data/readings.js';
-import { bookNumber, passageRange, plainText, loadPassage } from './bible.js';
+import { bookNumber, passageRange, plainText, loadPassage, chapterAudioUrl, passageAudio } from './bible.js';
 
 test('book numbers follow the standard order', () => {
   assert.equal(bookNumber('GEN'), 1);
@@ -71,4 +71,21 @@ test('loadPassage trims the first and last chapter to the verse range', async ()
 test('loadPassage rejects when the API errors', async () => {
   globalThis.fetch = async () => ({ ok: false, status: 404 });
   await assert.rejects(loadPassage('NOPE', 'GEN.1', null, null));
+});
+
+test('recorded audio file names match eBible.org (names seen on its file list)', () => {
+  const base = 'https://ebible.org/eng-webbe/mp3/eng-webbe_';
+  assert.equal(chapterAudioUrl('GEN', 1), base + '002_GEN_01.mp3');
+  assert.equal(chapterAudioUrl('PSA', 23), base + '020_PSA_023.mp3');
+  assert.equal(chapterAudioUrl('PSA', 119), base + '020_PSA_119.mp3');
+  assert.equal(chapterAudioUrl('MAT', 1), base + '070_MAT_01.mp3');
+  assert.equal(chapterAudioUrl('JHN', 3), base + '073_JHN_03.mp3');
+  assert.equal(chapterAudioUrl('1JN', 1), base + '092_1JN_01.mp3');
+  assert.equal(chapterAudioUrl('JUD', 1), base + '095_JUD_01.mp3');
+  assert.equal(chapterAudioUrl('REV', 22), base + '096_REV_22.mp3');
+});
+
+test('a passage plays every chapter it touches', () => {
+  assert.deepEqual(passageAudio('LUK.12.1', 13).map((t) => t.chapter), [12, 13]);
+  assert.deepEqual(passageAudio('LUK.8.18-21', 8).map((t) => t.chapter), [8]);
 });

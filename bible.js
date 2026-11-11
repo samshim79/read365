@@ -7,6 +7,9 @@ export const VERSIONS = [
   { id: 111, name: 'NIV', bolls: 'NIV', lang: 'en-US' },
   { id: 100, name: 'NASB', bolls: 'NASB', lang: 'en-US' },
   { id: 1, name: 'KJV', bolls: 'KJV', lang: 'en-US' },
+  // World English Bible: public domain, with recorded per-chapter audio (see chapterAudioUrl). Recorded audio keeps
+  // playing with the screen locked; text-to-speech does not. (YouVersion id 206 and the bolls name were not checked.)
+  { id: 206, name: 'WEB (recorded audio)', bolls: 'WEB', lang: 'en-US', audio: true },
   { id: 88, name: '개역한글', bolls: 'KRV', lang: 'ko-KR' },
   { id: 142, name: '새번역', bolls: null, lang: 'ko-KR' },
   { id: 86, name: '현대인의성경', bolls: null, lang: 'ko-KR' }, // has YouVersion audio (checked: NIV, NASB, KJV, 현대인의성경; not 개역한글/새번역)
@@ -70,4 +73,21 @@ export async function loadPassage(bolls, ref, endChapter, endVerse) {
   const { num, segments } = passageRange(ref, endChapter, endVerse);
   const chapters = await Promise.all(segments.map((s) => chapterVerses(bolls, num, s.chapter)));
   return segments.flatMap((s, i) => chapters[i].filter((v) => (s.from == null || v.verse >= s.from) && (s.to == null || v.verse <= s.to)));
+}
+
+// Recorded audio: eBible.org's World English Bible (British Edition) set, one mp3 per chapter, free to download and use.
+// File names look like eng-webbe_002_GEN_01.mp3 / eng-webbe_020_PSA_023.mp3 / eng-webbe_073_JHN_03.mp3:
+// Old Testament books are numbered 002-040, New Testament 070-096; chapters are 2 digits (3 for Psalms).
+export function chapterAudioUrl(usfm, chapter) {
+  const n = bookNumber(usfm);
+  if (!n) throw new Error(`unknown book ${usfm}`);
+  const book = String(n <= 39 ? n + 1 : n + 30).padStart(3, '0');
+  const ch = String(chapter).padStart(usfm === 'PSA' ? 3 : 2, '0');
+  return `https://ebible.org/eng-webbe/mp3/eng-webbe_${book}_${usfm}_${ch}.mp3`;
+}
+
+// The chapters a passage touches, as [{ chapter, url }]. Audio is per chapter, so a mid-chapter passage plays whole chapters.
+export function passageAudio(ref, endChapter = null) {
+  const usfm = ref.split('.')[0];
+  return passageRange(ref, endChapter).segments.map((s) => ({ chapter: s.chapter, url: chapterAudioUrl(usfm, s.chapter) }));
 }
