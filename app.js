@@ -39,6 +39,7 @@ function paintSpeakChip() {
   speakChip.classList.toggle('active', on);
 }
 reader.setStateListener(paintSpeakChip);
+reader.setBeforeSpeak(() => player.pause()); // don't talk over the lecture
 
 function renderPassages(video) {
   if (shownVideo !== video.id) { shownVideo = video.id; shownIdx = 0; }
@@ -64,7 +65,6 @@ function renderPassages(video) {
     speakChip.href = '#';
     speakChip.onclick = (e) => {
       e.preventDefault();
-      if (!reader.isPlaying()) player.pause(); // don't talk over the lecture
       reader.toggle();
     };
     box.appendChild(speakChip);
