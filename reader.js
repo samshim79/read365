@@ -11,8 +11,10 @@ let token = 0;     // bumped on every new passage and every stop; older speech/f
 let playing = false;
 let onState = () => {};
 let beforeSpeak = () => {};
+let onFinished = () => {};
 
 export function setStateListener(fn) { onState = fn; }
+export function setFinishedListener(fn) { onFinished = fn; } // runs when a passage is read to its end (not when stopped)
 export function setBeforeSpeak(fn) { beforeSpeak = fn; } // runs when read-aloud starts, e.g. to pause the lecture
 export const isPlaying = () => playing;
 
@@ -92,7 +94,7 @@ export function speak(from = 0) {
   setPlaying(true);
   const next = (i) => {
     if (mine !== token) return;
-    if (i >= verses.length) { setPlaying(false); nodes.forEach((n) => n.classList.remove('now')); return; }
+    if (i >= verses.length) { setPlaying(false); nodes.forEach((n) => n.classList.remove('now')); onFinished(); return; }
     nodes.forEach((n, k) => n.classList.toggle('now', k === i));
     nodes[i].scrollIntoView({ block: 'center', behavior: 'smooth' });
     const u = new SpeechSynthesisUtterance(verses[i].text);
