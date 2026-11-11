@@ -51,10 +51,12 @@ reader.setFinishedListener(() => {
 
 function renderPassages(video) {
   if (shownVideo !== video.id) { shownVideo = video.id; shownIdx = 0; }
-  const box = $('passages');
+  const box = $('passages'); // one row of passage chips under the title
+  const tools = $('tools');  // 🔊 and ↗, on the title row at the right
   const list = readings[video.day] || [];
   const version = versionById(store.bibleVersion());
   box.replaceChildren();
+  tools.replaceChildren();
   speakChip = null;
   list.forEach(([label, ref], i) => {
     const a = document.createElement('a');
@@ -64,6 +66,8 @@ function renderPassages(video) {
     a.onclick = (e) => { e.preventDefault(); advanceAfterReading = false; shownIdx = i; renderPassages(video); };
     box.appendChild(a);
   });
+  const active = box.querySelector('.chip.active'); // the row scrolls sideways when a day has many passages
+  if (active) active.scrollIntoView({ block: 'nearest', inline: 'center' });
   $('bibleWrap').hidden = !list.length;
   if (!list.length) { reader.stop(); loadedKey = null; return; }
   const [, ref, endChapter, endVerse] = list[shownIdx];
@@ -76,7 +80,7 @@ function renderPassages(video) {
       if (reader.isPlaying()) advanceAfterReading = false; // stopped by hand: stay on this lecture
       reader.toggle();
     };
-    box.appendChild(speakChip);
+    tools.appendChild(speakChip);
     paintSpeakChip();
   }
   const yv = document.createElement('a');
@@ -86,7 +90,7 @@ function renderPassages(video) {
   yv.href = passageUrl(ref, version.id);
   yv.target = '_blank';
   yv.rel = 'noopener';
-  box.appendChild(yv);
+  tools.appendChild(yv);
   const key = `${video.id}|${shownIdx}|${version.id}`;
   if (key !== loadedKey) {
     loadedKey = key;
