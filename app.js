@@ -2,7 +2,7 @@ import videos from './data/videos.js';
 import * as store from './store.js';
 import * as player from './player.js';
 import readings from './data/readings.js';
-import { VERSIONS, versionById, passageUrl, passageAudio } from './bible.js';
+import { VERSIONS, versionById, passageUrl, audioUrl, passageAudio } from './bible.js';
 import * as reader from './reader.js';
 import { renderPlaylist } from './views/playlist.js';
 import { renderProgress } from './views/progress.js';
@@ -71,8 +71,31 @@ function renderPassages(video) {
   $('bibleWrap').hidden = !list.length;
   if (!list.length) { reader.stop(); loadedKey = null; return; }
   const [label, ref, endChapter, endVerse] = list[shownIdx];
+  // Listen mode: YouVersion's narrated audio page (bible.com) in the pane, for versions that have it.
+  const listening = store.listen() && !!version.yvAudio;
+  const frame = $('bible');
+  frame.hidden = !listening;
+  $('reader').hidden = listening;
+  if (version.yvAudio) {
+    const ear = document.createElement('a');
+    ear.className = 'chip toggle' + (listening ? ' active' : '');
+    ear.textContent = '🎧';
+    ear.setAttribute('aria-label', listening ? 'Back to the text' : 'Listen on YouVersion');
+    ear.href = '#';
+    ear.onclick = (e) => { e.preventDefault(); advanceAfterReading = false; store.setListen(!listening); renderPassages(video); };
+    tools.appendChild(ear);
+  }
+  if (listening) {
+    reader.stop();
+    loadedKey = null; // so the text reloads when Listen is turned off
+    const url = audioUrl(ref, version.id);
+    if (frame.dataset.url !== url) { frame.dataset.url = url; frame.src = url; }
+  } else if (frame.dataset.url) {
+    delete frame.dataset.url;
+    frame.src = 'about:blank'; // stops the narration
+  }
   const tracks = version.audio ? passageAudio(ref, endChapter) : []; // recorded audio plays on the lock screen; text-to-speech doesn't
-  if (tracks.length || (reader.canSpeak && version.bolls)) {
+  if (!listening && (tracks.length || (reader.canSpeak && version.bolls))) {
     speakChip = document.createElement('a');
     speakChip.className = 'chip toggle';
     speakChip.href = '#';
@@ -93,7 +116,7 @@ function renderPassages(video) {
   yv.rel = 'noopener';
   tools.appendChild(yv);
   const key = `${video.id}|${shownIdx}|${version.id}`;
-  if (key !== loadedKey) {
+  if (!listening && key !== loadedKey) {
     loadedKey = key;
     const resume = autoSpeak;
     autoSpeak = false;
@@ -109,6 +132,7 @@ function renderPassages(video) {
 function readDay(video) {
   const list = readings[video.day] || [];
   const version = versionById(store.bibleVersion());
+  if (store.listen() && version.yvAudio) return list.length > 0; // Listen mode: stay on this lecture so the narration can be played
   if (!list.length || !(version.audio || (reader.canSpeak && version.bolls))) return false;
   advanceAfterReading = true;
   autoSpeak = true;
