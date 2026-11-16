@@ -4,6 +4,7 @@ import * as player from './player.js';
 import readings from './data/readings.js';
 import { VERSIONS, versionById, passageUrl, audioUrl, passageAudio } from './bible.js';
 import * as reader from './reader.js';
+import { hasVideos, buildQueue } from './reading.js';
 import { renderPlaylist } from './views/playlist.js';
 import { renderProgress } from './views/progress.js';
 
@@ -30,6 +31,8 @@ let shownVideo = null;
 let shownIdx = 0;
 let loadedKey = null; // what the pane currently shows, so unrelated refreshes (Mark done) don't reload it or stop read-aloud
 let speakChip = null;
+let reading = null;     // { queue, i } while the Bible reading videos are playing in the lecture's player
+let readingToken = 0;   // bumped whenever reading is started or cancelled, so a slow start can't take over later
 let advanceAfterReading = false; // set when the lecture ends: read the day's passages, then move on to the next lecture
 let autoSpeak = false; // set when read-aloud moves on to the next passage by itself, so it keeps reading once that text loads
 
@@ -63,7 +66,13 @@ function renderPassages(video) {
     a.className = 'chip' + (i === shownIdx ? ' active' : '');
     a.textContent = label;
     a.href = passageUrl(ref, version.id); // fallback: opens YouVersion in a new tab if scripting fails
-    a.onclick = (e) => { e.preventDefault(); advanceAfterReading = false; shownIdx = i; renderPassages(video); };
+    a.onclick = (e) => {
+      e.preventDefault();
+      advanceAfterReading = false;
+      if (reading) { startReading(video, i); return; } // jump the reading videos to this passage
+      shownIdx = i;
+      renderPassages(video);
+    };
     box.appendChild(a);
   });
   const active = box.querySelector('.chip.active'); // the row scrolls sideways when a day has many passages
@@ -71,6 +80,19 @@ function renderPassages(video) {
   $('bibleWrap').hidden = !list.length;
   if (!list.length) { reader.stop(); loadedKey = null; return; }
   const [label, ref, endChapter, endVerse] = list[shownIdx];
+  if (store.afterLecture() === 'videos' && hasVideos(list)) { // ▶ plays the reading videos from the selected passage; ⏹ goes back to the lecture
+    const play = document.createElement('a');
+    play.className = 'chip toggle' + (reading ? ' active' : '');
+    play.textContent = reading ? '⏹' : '▶';
+    play.setAttribute('aria-label', reading ? 'Stop the reading videos' : 'Play the reading videos');
+    play.href = '#';
+    play.onclick = (e) => {
+      e.preventDefault();
+      if (reading) open(store.current());
+      else { player.flush(); startReading(video, shownIdx); }
+    };
+    tools.appendChild(play);
+  }
   // Listen mode: YouVersion's narrated audio page (bible.com) in the pane, for versions that have it.
   const listening = store.listen() && !!version.yvAudio;
   const frame = $('bible');
@@ -128,6 +150,33 @@ function renderPassages(video) {
   }
 }
 
+// Play the day's Bible reading videos in the lecture's player, one after another, from passage `fromPassage`.
+// Resolves false when there are no videos for this day (the caller then falls back to the Bible app).
+async function startReading(video, fromPassage = 0) {
+  const mine = ++readingToken;
+  reader.stop();
+  const queue = await buildQueue(readings[video.day] || [], fromPassage);
+  if (mine !== readingToken) return true; // something else took over while the verse times loaded
+  if (!queue || !queue.length) return false;
+  reading = { queue, i: 0 };
+  playSegment();
+  return true;
+}
+
+function playSegment() {
+  const s = reading.queue[reading.i];
+  shownIdx = s.passage;
+  refresh();
+  player.load(s.id, s.start, s.end);
+}
+
+// A reading video finished (or couldn't play): the next one, or on to the next lecture after the last.
+function nextSegment() {
+  reading.i++;
+  if (reading.i < reading.queue.length) playSegment();
+  else go(1);
+}
+
 // The lecture ended: open the day's first passage in the YouVersion app, as if ↗ was tapped. False if the day has no reading.
 // The app stays on this lecture so the other passage chips are still there on return.
 function openBibleApp(video) {
@@ -171,7 +220,10 @@ function refresh() {
   const id = store.current();
   const i = indexOf(id);
   renderPassages(videos[i]);
-  $('where').textContent = `${videos[i].title} · ${i + 1} / ${videos.length}`;
+  const s = reading && reading.queue[reading.i];
+  $('where').textContent = s
+    ? `Reading ${s.label} · ${reading.i + 1} / ${reading.queue.length}`
+    : `${videos[i].title} · ${i + 1} / ${videos.length}`;
   $('prev').disabled = i === 0;
   $('next').disabled = i === videos.length - 1;
   $('done').textContent = store.isDone(id) ? '✔ Done' : 'Mark done';
@@ -181,6 +233,8 @@ function refresh() {
 
 function open(id) {
   advanceAfterReading = false;
+  reading = null;
+  readingToken++;
   store.setCurrent(id);
   $('error').hidden = true;
   $('notice').hidden = true;
@@ -213,6 +267,8 @@ $('navSettings').onclick = () => show('settingsView');
 
 for (const v of VERSIONS) $('version').add(new Option(v.name, v.id, false, v.id === store.bibleVersion()));
 $('version').onchange = (e) => { store.setBibleVersion(Number(e.target.value)); refresh(); };
+$('afterLecture').value = store.afterLecture();
+$('afterLecture').onchange = (e) => { store.setAfterLecture(e.target.value); refresh(); };
 
 function flush() { player.flush(); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
@@ -222,15 +278,19 @@ async function start() {
   $('retry').hidden = true;
   try {
     await player.mount($('yt'), {
-      onTick: (t) => store.savePosition(store.current(), t),
+      onTick: (t) => { if (!reading) store.savePosition(store.current(), t); },
       onEnded: () => {
+        if (reading) { nextSegment(); return; }
         const id = store.current();
         store.savePosition(id, 0);
         if (!store.isDone(id)) store.toggleDone(id);
         refresh();
-        if (!openBibleApp(videos[indexOf(id)])) go(1);
+        const video = videos[indexOf(id)];
+        // Per the Settings choice: the reading videos when the day has them; otherwise the Bible app
+        const videosFirst = store.afterLecture() === 'videos' ? startReading(video) : Promise.resolve(false);
+        videosFirst.then((ok) => { if (!ok && !openBibleApp(video)) go(1); });
       },
-      onError: (code) => showError(
+      onError: (code) => reading ? nextSegment() : showError(
         code === 100 ? 'This video was removed or is private.' : "This video can't be played in the app.",
         store.current(),
       ),
