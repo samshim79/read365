@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert';
 import readings from './data/readings.js';
-import { bookNumber, passageRange, plainText, loadPassage, chapterAudioUrl, passageAudio } from './bible.js';
+import { bookNumber, passageRange, plainText, loadPassage, chapterAudioUrl, passageAudio, verseTimes, TIMING } from './bible.js';
+import readingsAll from './data/readings.js';
+import { chapterVideo, hasVideos, buildQueue } from './reading.js';
 
 test('book numbers follow the standard order', () => {
   assert.equal(bookNumber('GEN'), 1);
@@ -88,4 +90,50 @@ test('recorded audio file names match eBible.org (names seen on its file list)',
 test('a passage plays every chapter it touches', () => {
   assert.deepEqual(passageAudio('LUK.12.1', 13).map((t) => t.chapter), [12, 13]);
   assert.deepEqual(passageAudio('LUK.8.18-21', 8).map((t) => t.chapter), [8]);
+});
+
+// Ten verses of equal length in a 100 s video: after the intro/outro, each verse gets an equal share
+const even = Array.from({ length: 10 }, (_, i) => ({ verse: i + 1, text: '가'.repeat(20) }));
+const share = (100 - TIMING.intro - TIMING.outro) / 10;
+
+test('verseTimes: a whole chapter plays from 0 with no end', () => {
+  assert.deepEqual(verseTimes(even, 100, null, null), { start: 0, end: undefined });
+  assert.deepEqual(verseTimes(even, 100, 1, 10), { start: 0, end: undefined });
+});
+
+test('verseTimes: a middle range starts a little early and ends a little late', () => {
+  const { start, end } = verseTimes(even, 100, 4, 6);
+  assert.equal(start, Math.round(TIMING.intro + 3 * share - TIMING.lead));
+  assert.equal(end, Math.round(TIMING.intro + 6 * share + TIMING.tail));
+});
+
+test('verseTimes: longer verses take proportionally longer', () => {
+  const uneven = [{ verse: 1, text: '가'.repeat(300) }, { verse: 2, text: '가'.repeat(100) }];
+  const { start } = verseTimes(uneven, 200, 2, null);
+  assert.ok(start > 140 && start < 150, String(start));
+});
+
+test('reading videos: every New Testament chapter in the schedule has one', () => {
+  assert.deepEqual(chapterVideo('LUK', 8), { id: '1OqbrDzKlpo', duration: 472 });
+  assert.equal(chapterVideo('GEN', 1), null);
+  const nt = new Set('MAT MRK LUK JHN ACT ROM 1CO 2CO GAL EPH PHP COL 1TH 2TH 1TI 2TI TIT PHM HEB JAS 1PE 2PE 1JN 2JN 3JN JUD REV'.split(' '));
+  for (const [day, list] of Object.entries(readingsAll)) {
+    if (list.every(([, ref]) => nt.has(ref.split('.')[0]))) assert.ok(hasVideos(list), `day ${day}`);
+  }
+});
+
+test('buildQueue: one video per chapter, with times only where a passage is partial', async () => {
+  globalThis.fetch = async () => ({ ok: true, json: async () => Array.from({ length: 50 }, (_, i) => ({ verse: i + 1, text: '가'.repeat(30) })) });
+  const q = await buildQueue([['눅 12:1-13:9', 'LUK.12.1', 13, 9], ['눅 8:18-21', 'LUK.8.18-21', 8, 21]]);
+  assert.deepEqual(q.map((s) => [s.passage, s.chapter, s.id]), [[0, 12, 'dmUiUwCPJIE'], [0, 13, 'ndvvmN9NXUQ'], [1, 8, '1OqbrDzKlpo']]);
+  assert.deepEqual([q[0].start, q[0].end], [0, undefined]);       // Luke 12 from verse 1 to its end
+  assert.ok(q[1].start === 0 && q[1].end > 0 && q[1].end < 308);   // Luke 13 stops after verse 9
+  assert.ok(q[2].start > 0 && q[2].end > q[2].start);              // Luke 8:18-21 has both
+  assert.equal((await buildQueue([['창 1', 'GEN.1', null, null]])), null); // no Old Testament videos yet
+});
+
+test('buildQueue: plays the whole chapter when the text for timing is unavailable', async () => {
+  globalThis.fetch = async () => ({ ok: false, status: 500 });
+  const q = await buildQueue([['막 4:35-5:20', 'MRK.4.35', 5, 20]]);
+  assert.deepEqual(q.map((s) => [s.chapter, s.start, s.end]), [[4, 0, undefined], [5, 0, undefined]]);
 });

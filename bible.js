@@ -69,6 +69,32 @@ async function chapterVerses(bolls, num, chapter) {
   return cache.get(key);
 }
 
+// One whole chapter as [{ chapter, verse, text }, ...].
+export const loadChapter = (bolls, usfm, chapter) => chapterVerses(bolls, bookNumber(usfm), chapter);
+
+// Where verses `from`..`to` fall in a chapter video `duration` seconds long, as { start, end } in seconds.
+// An ESTIMATE: it assumes the narrator spends time in proportion to each verse's length, after a short title
+// at the start and before a short tail at the end. null `from` = the chapter's start, null `to` = its end (end is
+// then undefined, so the video plays out). Starts a little early and ends a little late so no words are cut.
+export const TIMING = { intro: 5, outro: 4, lead: 2, tail: 1, pause: 6 }; // seconds, except pause (extra "characters" per verse)
+export function verseTimes(verses, duration, from = null, to = null) {
+  const weight = (v) => v.text.replace(/\s/g, '').length + TIMING.pause;
+  const total = verses.reduce((n, v) => n + weight(v), 0);
+  const usable = Math.max(duration - TIMING.intro - TIMING.outro, 1);
+  const at = (chars) => TIMING.intro + (usable * chars) / total;
+  const first = verses[0] ? verses[0].verse : 1;
+  const last = verses.length ? verses[verses.length - 1].verse : 1;
+  let start = 0;
+  let end;
+  if (from != null && from > first) {
+    start = Math.max(0, Math.round(at(verses.filter((v) => v.verse < from).reduce((n, v) => n + weight(v), 0)) - TIMING.lead));
+  }
+  if (to != null && to < last) {
+    end = Math.min(duration, Math.round(at(verses.filter((v) => v.verse <= to).reduce((n, v) => n + weight(v), 0)) + TIMING.tail));
+  }
+  return { start, end };
+}
+
 // Whole passage as [{ chapter, verse, text }, ...]; rejects if the text can't be fetched.
 export async function loadPassage(bolls, ref, endChapter, endVerse) {
   const { num, segments } = passageRange(ref, endChapter, endVerse);

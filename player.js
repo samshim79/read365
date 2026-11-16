@@ -56,6 +56,14 @@ export function cue(videoId, seconds) {
   player.cueVideoById({ videoId, startSeconds: seconds });
 }
 
+// Load and play a video now, from `start` seconds and (optionally) stopping at `end` seconds, where it reports ENDED.
+export function load(videoId, start = 0, end) {
+  resumeAt = 0;
+  const opts = { videoId, startSeconds: start };
+  if (end) opts.endSeconds = end;
+  player.loadVideoById(opts);
+}
+
 // Pause the lecture (used when read-aloud starts); the PAUSED state change saves the position
 export function pause() { if (player && player.getPlayerState && player.getPlayerState() === 1) player.pauseVideo(); }
 
