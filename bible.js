@@ -95,6 +95,15 @@ export function verseTimes(verses, duration, from = null, to = null) {
   return { start, end };
 }
 
+// Where verses `from`..`to` fall, from measured verse start times (data/verse-times.js) rather than an estimate.
+// Starts half a second before the first verse and stops just before the next verse begins; null `from` = the
+// chapter's start, null `to` (or the last verse) = play to the end.
+export function measuredTimes(starts, from = null, to = null) {
+  const start = from != null && from > 1 && starts[from - 1] != null ? Math.max(0, Math.round((starts[from - 1] - 0.5) * 10) / 10) : 0;
+  const end = to != null && to < starts.length && starts[to] != null ? Math.round((starts[to] - 0.2) * 10) / 10 : undefined;
+  return { start, end };
+}
+
 // Whole passage as [{ chapter, verse, text }, ...]; rejects if the text can't be fetched.
 export async function loadPassage(bolls, ref, endChapter, endVerse) {
   const { num, segments } = passageRange(ref, endChapter, endVerse);
