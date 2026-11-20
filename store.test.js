@@ -91,3 +91,18 @@ test('language: follows the phone until chosen, then remembered', () => {
   store.load('a');
   assert.equal(store.language(), 'en');
 });
+
+test('ESV reading videos lock the version to ESV; the Korean ones to 개역한글', () => {
+  store.load('a');
+  store.setBibleVersion(1);
+  store.setAfterLecture('videos-esv');
+  assert.equal(store.readingSource(), 'esv');
+  assert.equal(store.activeVersion(), 59);
+  assert.equal(store.versionAllowed(88), false);
+  store.setAfterLecture('videos');
+  assert.equal(store.readingSource(), 'ko');
+  assert.equal(store.activeVersion(), 88);
+  store.setAfterLecture('bible');
+  assert.equal(store.readingSource(), null);
+  assert.equal(store.activeVersion(), 1);
+});

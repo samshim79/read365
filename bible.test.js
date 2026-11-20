@@ -161,3 +161,14 @@ test('alignVerses finds verse starts in a transcript, skipping music and garbled
   assert.ok(Math.abs(s[1] - 9) < 1, String(s));
   assert.ok(s[2] > 11 && s[2] < 15, String(s));
 });
+
+test('ESV reading videos: every chapter has one, and they are separate from the Korean set', async () => {
+  assert.deepEqual(chapterVideo('MAT', 1, 'esv'), { id: 'w0YrWsAQ9U8', duration: 234 });
+  assert.deepEqual(chapterVideo('JOB', 23, 'esv'), { id: 'WxZx6mOEhak', duration: 125 });
+  for (const [day, list] of Object.entries(readingsAll)) {
+    if (list && list.length) assert.ok(hasVideos(list, 'esv'), `day ${day}`);
+  }
+  globalThis.fetch = async () => ({ ok: false, status: 500 });
+  const q = await buildQueue([['창 1', 'GEN.1', null, null]], 0, 'esv');
+  assert.deepEqual(q.map((s) => s.id), ['oUMxJrCYW2s']);
+});

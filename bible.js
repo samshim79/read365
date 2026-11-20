@@ -2,10 +2,11 @@
 // Text comes from the open bolls.life API and is read inside the app (no embedded bible.com page, which went blank
 // when the YouVersion app was already open). YouVersion links stay as an "open in app" fallback for versions bolls.life lacks.
 // `bolls` is the bolls.life translation name; null = not available there, so only the YouVersion link is offered.
-// NASB, KJV, WEB and KRV were checked to load from bolls.life (Nov 2026). NIV was removed: bolls.life no longer serves it
+// ESV, NASB, KJV, WEB and KRV were checked to load from bolls.life (Nov 2026). NIV was removed: bolls.life no longer serves it
 // (Biblica asked it to stop) and returned a notice instead of the verses. A failed fetch shows the YouVersion link.
 // `yvAudio`: YouVersion has narrated audio for this version; 🎧 embeds its bible.com audio page in the pane.
 export const VERSIONS = [
+  { id: 59, name: 'ESV', bolls: 'ESV', lang: 'en-US' },
   { id: 100, name: 'NASB', bolls: 'NASB', lang: 'en-US', yvAudio: true },
   { id: 1, name: 'KJV', bolls: 'KJV', lang: 'en-US', yvAudio: true },
   // World English Bible: public domain, with recorded per-chapter audio (see chapterAudioUrl). Recorded audio keeps

@@ -81,7 +81,7 @@ function renderPassages(video) {
   $('bibleWrap').hidden = !list.length;
   if (!list.length) { reader.stop(); loadedKey = null; return; }
   const [label, ref, endChapter, endVerse] = list[shownIdx];
-  if (store.afterLecture() === 'videos' && hasVideos(list)) { // ▶ plays the reading videos from the selected passage; ⏹ goes back to the lecture
+  if (store.readingSource() && hasVideos(list, store.readingSource())) { // ▶ plays the reading videos from the selected passage; ⏹ goes back to the lecture
     const play = document.createElement('a');
     play.className = 'chip toggle' + (reading ? ' active' : '');
     play.textContent = reading ? '⏹' : '▶';
@@ -156,7 +156,7 @@ function renderPassages(video) {
 async function startReading(video, fromPassage = 0) {
   const mine = ++readingToken;
   reader.stop();
-  const queue = await buildQueue(readings[video.day] || [], fromPassage);
+  const queue = await buildQueue(readings[video.day] || [], fromPassage, store.readingSource());
   if (mine !== readingToken) return true; // something else took over while the verse times loaded
   if (!queue || !queue.length) return false;
   reading = { queue, i: 0 };
@@ -286,7 +286,8 @@ function renderSettings() {
   $('version').value = String(store.activeVersion());
   $('afterLecture').value = store.afterLecture();
   $('language').value = store.language();
-  $('versionNote').hidden = store.afterLecture() !== 'videos';
+  $('versionNote').hidden = !store.readingSource();
+  $('versionNote').textContent = t(store.readingSource() === 'esv' ? 'versionNoteEsv' : 'versionNote');
 }
 applyStatic();
 renderSettings();
@@ -310,7 +311,7 @@ async function start() {
         refresh();
         const video = videos[indexOf(id)];
         // Per the Settings choice: the reading videos when the day has them; otherwise the Bible app
-        const videosFirst = store.afterLecture() === 'videos' ? startReading(video) : Promise.resolve(false);
+        const videosFirst = store.readingSource() ? startReading(video) : Promise.resolve(false);
         videosFirst.then((ok) => { if (!ok && !openBibleApp(video)) go(1); });
       },
       onError: (code) => reading ? nextSegment() : showError(

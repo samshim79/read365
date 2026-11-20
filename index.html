@@ -42,16 +42,17 @@
     </section>
     <section id="settingsView" hidden>
       <h1 data-i18n="settings">Settings</h1>
-      <label for="language" data-i18n="language">Language</label>
-      <select id="language"></select>
       <label for="afterLecture" data-i18n="readingMode">Bible reading - video</label>
       <select id="afterLecture">
-        <option value="videos" data-i18n="modeVideos">Play the reading videos (YouTube)</option>
+        <option value="videos" data-i18n="modeVideos">Play the reading videos – 개역개정 (YouTube)</option>
+        <option value="videos-esv" data-i18n="modeVideosEsv">Play the reading videos – ESV (YouTube)</option>
         <option value="bible" data-i18n="modeBible">Open the reading in the Bible app</option>
       </select>
       <label for="version" data-i18n="bibleVersion">Bible version</label>
       <select id="version"></select>
-      <p id="versionNote" class="note" data-i18n="versionNote" hidden>The reading videos are in Korean, so the text is 개역한글. To use another version, choose “Open the reading in the Bible app”.</p>
+      <p id="versionNote" class="note" hidden></p>
+      <label for="language" data-i18n="language">Language</label>
+      <select id="language"></select>
     </section>
   </main>
   <nav>
