@@ -1,7 +1,10 @@
 // Builds data/reading-videos.js from tools/reading-videos.json.
-// The JSON is keyed by book number (40 = Matthew ... 66 = Revelation); each entry lists that book's chapters in order
+// The JSON is keyed by book number (1 = Genesis ... 66 = Revelation); each entry lists that book's chapters in order
 // as "videoId:seconds". Source: the 공동체성경읽기 channel's "NN. <book>_장별 구절 영상(개역개정)" playlists (CGNTV / PRS).
-// Old Testament books (1-39) are not collected yet.
+// Old Testament books come from the same channel's "N. <book>_장별 구절 영상(개역개정)" playlists where they exist; chapters
+// missing from a playlist (and books with no playlist, e.g. 룻기, 요엘, 요나) were found by searching for "<book> N장 (개역개정)"
+// on the channel and checking the original title. 스가랴 12장 has no (개역개정) video, so it uses the channel's illustrated
+// "스가랴 12장" (개역개정 wording, bilingual).
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const BOOKS = ('GEN EXO LEV NUM DEU JOS JDG RUT 1SA 2SA 1KI 2KI 1CH 2CH EZR NEH EST JOB PSA PRO ECC SNG ISA JER LAM EZK DAN '

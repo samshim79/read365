@@ -115,12 +115,11 @@ test('verseTimes: longer verses take proportionally longer', () => {
   assert.ok(start > 140 && start < 150, String(start));
 });
 
-test('reading videos: every New Testament chapter in the schedule has one', () => {
+test('reading videos: every chapter in the schedule has one, Old and New Testament', () => {
   assert.deepEqual(chapterVideo('LUK', 8), { id: '1OqbrDzKlpo', duration: 472 });
-  assert.equal(chapterVideo('GEN', 1), null);
-  const nt = new Set('MAT MRK LUK JHN ACT ROM 1CO 2CO GAL EPH PHP COL 1TH 2TH 1TI 2TI TIT PHM HEB JAS 1PE 2PE 1JN 2JN 3JN JUD REV'.split(' '));
+  assert.deepEqual(chapterVideo('GEN', 1), { id: 'NbGHNcPhlUY', duration: 349 });
   for (const [day, list] of Object.entries(readingsAll)) {
-    if (list.every(([, ref]) => nt.has(ref.split('.')[0]))) assert.ok(hasVideos(list), `day ${day}`);
+    if (list && list.length) assert.ok(hasVideos(list), `day ${day}`);
   }
 });
 
@@ -131,7 +130,7 @@ test('buildQueue: one video per chapter, with times only where a passage is part
   assert.deepEqual([q[0].start, q[0].end], [0, undefined]);       // Luke 12 from verse 1 to its end
   assert.ok(q[1].start === 0 && q[1].end > 0 && q[1].end < 308);   // Luke 13 stops after verse 9
   assert.ok(q[2].start > 0 && q[2].end > q[2].start);              // Luke 8:18-21 has both
-  assert.equal((await buildQueue([['창 1', 'GEN.1', null, null]])), null); // no Old Testament videos yet
+  assert.deepEqual((await buildQueue([['창 1', 'GEN.1', null, null]])).map((s) => s.id), ['NbGHNcPhlUY']); // Old Testament too
 });
 
 test('buildQueue: plays the whole chapter when the text for timing is unavailable', async () => {

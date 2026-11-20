@@ -80,3 +80,14 @@ test('corrupt storage does not crash', () => {
   store.load('a');
   assert.equal(store.current(), 'a');
 });
+
+test('language: follows the phone until chosen, then remembered', () => {
+  store.load('a');
+  assert.ok(['ko', 'en'].includes(store.language()));
+  store.setLanguage('ko');
+  store.load('a');
+  assert.equal(store.language(), 'ko');
+  store.setLanguage('en');
+  store.load('a');
+  assert.equal(store.language(), 'en');
+});

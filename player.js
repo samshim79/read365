@@ -1,4 +1,5 @@
 // YouTube IFrame API wrapper. Cues videos (user taps play) and reports position every 5 s.
+import { t } from './i18n.js';
 let player;
 let timer;
 let onTick = () => {};
@@ -13,7 +14,7 @@ const apiReady = () => new Promise((resolve, reject) => {
   window.onYouTubeIframeAPIReady = resolve;
   const tag = document.createElement('script');
   tag.src = 'https://www.youtube.com/iframe_api';
-  tag.onerror = () => reject(new Error('Could not load the YouTube player. Check your connection.'));
+  tag.onerror = () => reject(new Error(t('playerLoadFailed')));
   document.head.appendChild(tag);
 });
 
