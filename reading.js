@@ -33,7 +33,8 @@ export async function buildQueue(list, fromPassage = 0) {
       const whole = { passage, label, chapter: s.chapter, id: video.id, duration: video.duration, start: 0, end: undefined };
       if (s.from == null && s.to == null) { jobs.push(whole); continue; }
       const measured = verseTimesMap[`${usfm}.${s.chapter}`];
-      if (measured) { jobs.push({ ...whole, ...measuredTimes(measured, s.from, s.to) }); continue; }
+      const times = measured && measuredTimes(measured, s.from, s.to);
+      if (times) { jobs.push({ ...whole, ...times }); continue; }
       jobs.push(loadChapter('KRV', usfm, s.chapter)
         .then((verses) => ({ ...whole, ...verseTimes(verses, video.duration, s.from, s.to) }))
         .catch(() => whole));
