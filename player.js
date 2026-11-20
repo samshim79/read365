@@ -6,6 +6,7 @@ let onEnded = () => {};
 let onError = () => {};
 let resumeAt = 0;
 let segment = null; // { start, end, checked } while a reading video plays; null for a lecture
+let loadedId = null; // the video last loaded or cued
 
 const apiReady = () => new Promise((resolve, reject) => {
   if (window.YT && window.YT.Player) return resolve();
@@ -24,13 +25,9 @@ function tick() {
 function onStateChange(e) {
   const S = window.YT.PlayerState;
   if (e.data === S.PLAYING) {
-    // A reading video must start at its passage. The player can ignore startSeconds (for example when the same
-    // chapter video is loaded again for the next passage), so check once and seek if it started elsewhere.
-    if (segment && !segment.checked) {
-      segment.checked = true;
-      const t = player.getCurrentTime();
-      if (t < segment.start - 2 || t > segment.end) player.seekTo(segment.start, true);
-    }
+    // A reading video always starts at its passage's start. The player can ignore startSeconds (for example when
+    // the same chapter video is loaded again, or a passage is tapped while it plays), so check once and seek.
+    if (segment && !segment.checked) startAtPassage(segment);
     clearInterval(timer);
     timer = setInterval(tick, 5000);
   } else {
@@ -62,14 +59,25 @@ export async function mount(el, handlers) {
 export function cue(videoId, seconds) {
   resumeAt = seconds;
   segment = null;
+  loadedId = videoId;
   player.cueVideoById({ videoId, startSeconds: seconds });
 }
 
 // Load and play a reading video now, from `start` seconds to `end` seconds, where it reports ENDED.
 export function load(videoId, start = 0, end) {
   resumeAt = 0;
-  segment = { start, end, checked: false };
+  const seg = { start, end, checked: false };
+  segment = seg;
+  const same = videoId === loadedId;
+  loadedId = videoId;
   player.loadVideoById({ videoId, startSeconds: start, endSeconds: end });
+  // Reloading the video that is already playing may not report PLAYING again, so check it directly too.
+  if (same) setTimeout(() => { if (segment === seg) startAtPassage(seg); }, 600);
+}
+
+function startAtPassage(seg) {
+  seg.checked = true;
+  if (Math.abs(player.getCurrentTime() - seg.start) > 2) player.seekTo(seg.start, true);
 }
 
 // Pause the lecture (used when read-aloud starts); the PAUSED state change saves the position
