@@ -1,6 +1,6 @@
 // State + persistence. Everything lives under one versioned localStorage key.
 const KEY = 'read365:v1';
-const fresh = () => ({ current: null, positions: {}, done: {}, bibleVersion: 111, listen: false, afterLecture: 'bible' });
+const fresh = () => ({ current: null, positions: {}, done: {}, bibleVersion: 100, listen: false, afterLecture: 'bible' });
 let s = fresh();
 
 function persist() {
@@ -14,6 +14,7 @@ export function load(firstId) {
     if (r && typeof r === 'object') s = { ...s, ...r };
   } catch { /* empty or corrupt: start fresh */ }
   if (!s.current) s.current = firstId;
+  if (s.bibleVersion === 111) s.bibleVersion = 100; // NIV was removed (bolls.life stopped serving it): NASB instead
 }
 
 export const current = () => s.current;

@@ -34,12 +34,18 @@ test('toggleDone twice undoes it', () => {
   assert.equal(store.isDone('a'), false);
 });
 
-test('bible version defaults to NIV and is remembered', () => {
+test('bible version defaults to NASB and is remembered', () => {
   store.load('a');
-  assert.equal(store.bibleVersion(), 111);
+  assert.equal(store.bibleVersion(), 100);
   store.setBibleVersion(142);
   store.load('a');
   assert.equal(store.bibleVersion(), 142);
+});
+
+test('a saved NIV choice becomes NASB', () => {
+  store.setBibleVersion(111);
+  store.load('a');
+  assert.equal(store.bibleVersion(), 100);
 });
 
 test('streak counts consecutive days and survives a not-yet-done today', () => {
