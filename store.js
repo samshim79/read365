@@ -23,21 +23,25 @@ export const isDone = (id) => id in s.done;
 export const doneCount = () => Object.keys(s.done).length;
 export const bibleVersion = () => s.bibleVersion;
 export function setBibleVersion(id) { s.bibleVersion = id; persist(); }
-// The reading videos are Korean (개역개정 narration), so while they are on, only these versions can be chosen and the
-// text shows 개역한글 (bolls.life has no 개역개정). The saved choice is kept for when the Bible app option is back on.
-export const READING_VIDEO_VERSIONS = [88];
+// While reading videos are on, only the versions that match their narration can be chosen: the Korean videos (개역개정)
+// show 개역한글 text (bolls.life has no 개역개정), the ESV videos show ESV. The saved choice is kept for the Bible app option.
+export const READING_VIDEO_VERSIONS = { ko: [88], esv: [59] };
 // Interface language: 'ko' or 'en'. Until one is chosen, it follows the phone's language (Korean phones get Korean).
 const deviceLanguage = () => (typeof navigator !== 'undefined' && /^ko\b/i.test(navigator.language || '') ? 'ko' : 'en');
 export const language = () => (s.language === 'ko' || s.language === 'en' ? s.language : deviceLanguage());
 export function setLanguage(lang) { s.language = lang === 'ko' ? 'ko' : 'en'; persist(); }
-export const versionAllowed = (id) => afterLecture() !== 'videos' || READING_VIDEO_VERSIONS.includes(id);
-export const activeVersion = () => (versionAllowed(s.bibleVersion) ? s.bibleVersion : READING_VIDEO_VERSIONS[0]);
+export const versionAllowed = (id) => !readingSource() || READING_VIDEO_VERSIONS[readingSource()].includes(id);
+export const activeVersion = () => (versionAllowed(s.bibleVersion) ? s.bibleVersion : READING_VIDEO_VERSIONS[readingSource()][0]);
 // Listen mode: the Bible pane shows YouVersion's narrated audio page instead of the in-app text
 export const listen = () => !!s.listen;
 export function setListen(on) { s.listen = !!on; persist(); }
-// What happens when a lecture ends: 'videos' (the default) plays the reading videos, 'bible' opens the reading in the Bible app
-export const afterLecture = () => (s.afterLecture === 'bible' ? 'bible' : 'videos');
-export function setAfterLecture(mode) { s.afterLecture = mode === 'videos' ? 'videos' : 'bible'; persist(); }
+// What happens when a lecture ends: 'videos' (the default) plays the Korean reading videos, 'videos-esv' the ESV ones,
+// 'bible' opens the reading in the Bible app
+const MODES = ['videos', 'videos-esv', 'bible'];
+export const afterLecture = () => (MODES.includes(s.afterLecture) ? s.afterLecture : 'videos');
+export function setAfterLecture(mode) { s.afterLecture = MODES.includes(mode) ? mode : 'bible'; persist(); }
+// Which reading videos play: 'ko', 'esv', or null when the Bible app is used instead
+export const readingSource = () => ({ videos: 'ko', 'videos-esv': 'esv' })[afterLecture()] || null;
 
 export function setCurrent(id) { s.current = id; persist(); }
 export function savePosition(id, seconds) { s.positions[id] = Math.floor(seconds); persist(); }
