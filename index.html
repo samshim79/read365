@@ -42,13 +42,14 @@
     </section>
     <section id="settingsView" hidden>
       <h1>Settings</h1>
-      <label for="version">Bible version</label>
-      <select id="version"></select>
       <label for="afterLecture">When a lecture ends</label>
       <select id="afterLecture">
-        <option value="bible">Open the reading in the Bible app</option>
         <option value="videos">Play the reading videos (YouTube)</option>
+        <option value="bible">Open the reading in the Bible app</option>
       </select>
+      <label for="version">Bible version</label>
+      <select id="version"></select>
+      <p id="versionNote" class="note" hidden>The reading videos are in Korean, so the text is 개역한글. To use another version, choose “Open the reading in the Bible app”.</p>
     </section>
   </main>
   <nav>

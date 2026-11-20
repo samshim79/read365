@@ -2,10 +2,10 @@
 // Text comes from the open bolls.life API and is read inside the app (no embedded bible.com page, which went blank
 // when the YouVersion app was already open). YouVersion links stay as an "open in app" fallback for versions bolls.life lacks.
 // `bolls` is the bolls.life translation name; null = not available there, so only the YouVersion link is offered.
-// (KRV, NIV, KJV were not checked against bolls.life's list from here; NASB is the least certain. A failed fetch shows the YouVersion link.)
+// NASB, KJV, WEB and KRV were checked to load from bolls.life (Nov 2026). NIV was removed: bolls.life no longer serves it
+// (Biblica asked it to stop) and returned a notice instead of the verses. A failed fetch shows the YouVersion link.
 // `yvAudio`: YouVersion has narrated audio for this version; 🎧 embeds its bible.com audio page in the pane.
 export const VERSIONS = [
-  { id: 111, name: 'NIV', bolls: 'NIV', lang: 'en-US', yvAudio: true },
   { id: 100, name: 'NASB', bolls: 'NASB', lang: 'en-US', yvAudio: true },
   { id: 1, name: 'KJV', bolls: 'KJV', lang: 'en-US', yvAudio: true },
   // World English Bible: public domain, with recorded per-chapter audio (see chapterAudioUrl). Recorded audio keeps
@@ -13,7 +13,7 @@ export const VERSIONS = [
   { id: 206, name: 'WEB (recorded audio)', bolls: 'WEB', lang: 'en-US', audio: true },
   { id: 88, name: '개역한글', bolls: 'KRV', lang: 'ko-KR' },
   { id: 142, name: '새번역', bolls: null, lang: 'ko-KR' },
-  { id: 86, name: '현대인의성경', bolls: null, lang: 'ko-KR', yvAudio: true }, // has YouVersion audio (checked: NIV, NASB, KJV, 현대인의성경; not 개역한글/새번역)
+  { id: 86, name: '현대인의성경', bolls: null, lang: 'ko-KR', yvAudio: true }, // has YouVersion audio (checked: NASB, KJV, 현대인의성경; not 개역한글/새번역)
 ];
 export const versionById = (id) => VERSIONS.find((v) => v.id === id) || VERSIONS[0];
 

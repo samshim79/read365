@@ -41,6 +41,7 @@ button.on, nav .active { background: var(--accent); color: #000; }
 .strip div.on { background: var(--accent); }
 .chip.toggle { justify-content: center; min-width: 34px; padding: 0; }
 label { display: block; margin: 16px 0 8px; color: var(--muted); }
+.note { margin: 8px 0 0; color: var(--muted); font-size: 0.85em; line-height: 1.4; word-break: keep-all; }
 select { width: 100%; min-height: 44px; padding: 0 10px; border: 0; border-radius: 8px; background: var(--panel); color: var(--fg); font: inherit; }
 .controls { display: flex; gap: 8px; margin: 8px 0; } /* equal 8px gap above (video) and below (Bible pane) */
 .controls button { flex: 1; min-height: 34px; }
