@@ -95,13 +95,20 @@ export function verseTimes(verses, duration, from = null, to = null) {
   return { start, end };
 }
 
-// Where verses `from`..`to` fall, from measured verse start times (data/verse-times.js) rather than an estimate.
-// Starts half a second before the first verse and stops just before the next verse begins; null `from` = the
-// chapter's start, null `to` (or the last verse) = play to the end.
-export function measuredTimes(starts, from = null, to = null) {
-  const start = from != null && from > 1 && starts[from - 1] != null ? Math.max(0, Math.round((starts[from - 1] - 0.5) * 10) / 10) : 0;
-  const end = to != null && to < starts.length && starts[to] != null ? Math.round((starts[to] - 0.2) * 10) / 10 : undefined;
-  return { start, end };
+// Where verses `from`..`to` fall, from the verse-card times in data/verse-times.js ({ verse: seconds }) rather
+// than an estimate. Starts a moment before verse `from`'s card and stops a moment after verse `to + 1`'s card, so the
+// last words of `to` are never cut. null `from` = the chapter's start; null `to`, or no card for `to + 1` (the chapter's
+// last verse), = play to the end. Returns null when the start verse has no card, so the caller can estimate instead.
+export const CARD = { lead: 0.3, tail: 0.3 };
+export function measuredTimes(cards, from = null, to = null) {
+  const r1 = (t) => Math.round(t * 10) / 10;
+  let start = 0;
+  if (from != null && from > 1) {
+    if (cards[from] == null) return null;
+    start = Math.max(0, r1(cards[from] - CARD.lead));
+  }
+  const next = to != null ? cards[to + 1] : null;
+  return { start, end: next != null ? r1(next + CARD.tail) : undefined };
 }
 
 // Whole passage as [{ chapter, verse, text }, ...]; rejects if the text can't be fetched.

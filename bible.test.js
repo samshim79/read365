@@ -136,21 +136,22 @@ test('buildQueue: one video per chapter, with times only where a passage is part
 
 test('buildQueue: plays the whole chapter when the text for timing is unavailable', async () => {
   globalThis.fetch = async () => ({ ok: false, status: 500 });
-  const q = await buildQueue([['막 4:35-5:20', 'MRK.4.35', 5, 20]]);
-  assert.deepEqual(q.map((s) => [s.chapter, s.start, s.end]), [[4, 0, undefined], [5, 0, undefined]]);
+  const q = await buildQueue([['막 10:1-12', 'MRK.10.1', 10, 12]]);
+  assert.deepEqual(q.map((s) => [s.chapter, s.start, s.end]), [[10, 0, undefined]]);
 });
 
-test('measuredTimes: from just before the first verse to just before the next one', () => {
-  const starts = [0, 10, 20, 30, 40];
-  assert.deepEqual(measuredTimes(starts, 2, 3), { start: 9.5, end: 29.8 });
-  assert.deepEqual(measuredTimes(starts, 1, 5), { start: 0, end: undefined });
-  assert.deepEqual(measuredTimes(starts, 4, 4), { start: 29.5, end: 39.8 }); // a lone verse
+test('measuredTimes: from just before verse from\'s card to just after verse to+1\'s card', () => {
+  const cards = { 2: 10, 4: 30, 5: 40 };
+  assert.deepEqual(measuredTimes(cards, 2, 3), { start: 9.7, end: 30.3 });
+  assert.deepEqual(measuredTimes(cards, 1, 5), { start: 0, end: undefined });
+  assert.deepEqual(measuredTimes(cards, 4, 4), { start: 29.7, end: 40.3 }); // a lone verse
+  assert.equal(measuredTimes(cards, 3, 4), null); // no card for the start verse: caller estimates
 });
 
-test('buildQueue uses measured times where a chapter has them (day 278: 마4:12, 막1:14)', async () => {
+test('buildQueue uses checked verse-card times (day 278: 마4:12, 막1:14, 눅3:19-20)', async () => {
   globalThis.fetch = async () => { throw new Error('no network needed for measured chapters'); };
   const q = await buildQueue([['마 4:12', 'MAT.4.12', 4, 12], ['막 1:14', 'MRK.1.14', 1, 14], ['눅 3:19-20', 'LUK.3.19-20', 3, 20]]);
-  assert.deepEqual(q.map((s) => [s.chapter, s.start, s.end]), [[4, 79.6, 86.5], [1, 100.5, 107], [3, 153.7, 166.9]]);
+  assert.deepEqual(q.map((s) => [s.chapter, s.start, s.end]), [[4, 81.6, 86.8], [1, 102, 109.5], [3, 155.6, 171.2]]);
 });
 
 test('alignVerses finds verse starts in a transcript, skipping music and garbled lines', () => {
