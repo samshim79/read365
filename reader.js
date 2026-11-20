@@ -1,6 +1,7 @@
 // In-app Bible reader: shows a passage's text and reads it aloud, with recorded audio when the version has it
 // (keeps playing with the screen locked) and otherwise the phone's built-in text-to-speech (stops on lock).
 import { loadPassage } from './bible.js';
+import { t } from './i18n.js';
 
 export const canSpeak = typeof speechSynthesis !== 'undefined' && typeof SpeechSynthesisUtterance !== 'undefined';
 
@@ -44,7 +45,7 @@ function message(text, link) {
     a.href = link;
     a.target = '_blank';
     a.rel = 'noopener';
-    a.textContent = 'Open in YouVersion';
+    a.textContent = t('openInYouVersion');
     p.appendChild(a);
   }
   box.appendChild(p);
@@ -63,8 +64,8 @@ export async function show(opts) {
   tracks = opts.tracks || [];
   title = opts.title || '';
   const mine = token;
-  if (!opts.bolls) { message('This version has no open text source.', opts.fallbackUrl); return tracks.length > 0; }
-  message('Loading…');
+  if (!opts.bolls) { message(t('noTextSource'), opts.fallbackUrl); return tracks.length > 0; }
+  message(t('loading'));
   try {
     const list = await loadPassage(opts.bolls, opts.ref, opts.endChapter, opts.endVerse);
     if (mine !== token) return false; // a newer passage was picked while this one loaded
@@ -93,7 +94,7 @@ export async function show(opts) {
     return true;
   } catch (e) {
     if (mine !== token) return false;
-    message(tracks.length ? "Couldn't load the text. The audio still plays." : "Couldn't load the text.", opts.fallbackUrl);
+    message(tracks.length ? t('textFailedAudio') : t('textFailed'), opts.fallbackUrl);
     return tracks.length > 0;
   }
 }

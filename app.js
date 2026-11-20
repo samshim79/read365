@@ -7,6 +7,7 @@ import * as reader from './reader.js';
 import { hasVideos, buildQueue } from './reading.js';
 import { renderPlaylist } from './views/playlist.js';
 import { renderProgress } from './views/progress.js';
+import { t, applyStatic, videoTitle, LANGUAGES } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const indexOf = (id) => videos.findIndex((v) => v.id === id);
@@ -20,7 +21,7 @@ function showError(msg, id) {
   if (id) {
     const a = document.createElement('a');
     a.href = `https://www.youtube.com/watch?v=${id}&t=${store.position(id)}s`;
-    a.textContent = 'Open in YouTube';
+    a.textContent = t('openInYouTube');
     box.appendChild(a);
   }
   box.hidden = false;
@@ -40,7 +41,7 @@ function paintSpeakChip() {
   if (!speakChip) return;
   const on = reader.isPlaying();
   speakChip.textContent = on ? '⏹' : '🔊';
-  speakChip.setAttribute('aria-label', on ? 'Stop reading' : 'Read aloud');
+  speakChip.setAttribute('aria-label', on ? t('stopReading') : t('readAloud'));
   speakChip.classList.toggle('active', on);
 }
 reader.setStateListener(paintSpeakChip);
@@ -84,7 +85,7 @@ function renderPassages(video) {
     const play = document.createElement('a');
     play.className = 'chip toggle' + (reading ? ' active' : '');
     play.textContent = reading ? '⏹' : '▶';
-    play.setAttribute('aria-label', reading ? 'Stop the reading videos' : 'Play the reading videos');
+    play.setAttribute('aria-label', reading ? t('stopVideos') : t('playVideos'));
     play.href = '#';
     play.onclick = (e) => {
       e.preventDefault();
@@ -102,7 +103,7 @@ function renderPassages(video) {
     const ear = document.createElement('a');
     ear.className = 'chip toggle' + (listening ? ' active' : '');
     ear.textContent = '🎧';
-    ear.setAttribute('aria-label', listening ? 'Back to the text' : 'Listen on YouVersion');
+    ear.setAttribute('aria-label', listening ? t('backToText') : t('listen'));
     ear.href = '#';
     ear.onclick = (e) => { e.preventDefault(); advanceAfterReading = false; store.setListen(!listening); renderPassages(video); };
     tools.appendChild(ear);
@@ -132,7 +133,7 @@ function renderPassages(video) {
   const yv = document.createElement('a');
   yv.className = 'chip';
   yv.textContent = '↗';
-  yv.setAttribute('aria-label', 'Open in YouVersion');
+  yv.setAttribute('aria-label', t('openInYouVersion'));
   yv.href = passageUrl(ref, version.id);
   yv.target = '_blank';
   yv.rel = 'noopener';
@@ -196,7 +197,7 @@ function openBibleApp(video) {
   link.href = url;
   link.target = '_blank';
   link.rel = 'noopener';
-  link.textContent = `Open ${list[0][0]} in the Bible app ↗`;
+  link.textContent = t('openInBibleApp', list[0][0]);
   link.onclick = () => { box.hidden = true; };
   box.replaceChildren(link);
   box.hidden = false;
@@ -224,13 +225,13 @@ function refresh() {
   renderPassages(videos[i]);
   const s = reading && reading.queue[reading.i];
   $('where').textContent = s
-    ? `Reading ${s.label} · ${reading.i + 1} / ${reading.queue.length}`
-    : `${videos[i].title} · ${i + 1} / ${videos.length}`;
+    ? t('readingNow', s.label, reading.i + 1, reading.queue.length)
+    : `${videoTitle(videos[i].title)} · ${i + 1} / ${videos.length}`;
   $('prev').disabled = i === 0;
   $('next').disabled = i === videos.length - 1;
-  $('done').textContent = store.isDone(id) ? '✔ Done' : 'Mark done';
+  $('done').textContent = store.isDone(id) ? t('done') : t('markDone');
   $('done').classList.toggle('on', store.isDone(id));
-  $('doneCount').textContent = `${store.doneCount()} / ${videos.length} done`;
+  $('doneCount').textContent = t('doneCount', store.doneCount(), videos.length);
 }
 
 function open(id) {
@@ -249,7 +250,9 @@ function go(delta) {
   if (i >= 0 && i < videos.length) open(videos[i].id);
 }
 
+let currentView = 'playerView';
 function show(view) {
+  currentView = view;
   for (const v of ['playerView', 'playlistView', 'progressView', 'settingsView']) $(v).hidden = v !== view;
   $('navPlayer').classList.toggle('active', view === 'playerView');
   $('navPlaylist').classList.toggle('active', view === 'playlistView');
@@ -268,13 +271,24 @@ $('navProgress').onclick = () => show('progressView');
 $('navSettings').onclick = () => show('settingsView');
 
 for (const v of VERSIONS) $('version').add(new Option(v.name, v.id));
-// Only the versions that fit the "When a lecture ends" choice can be picked (the reading videos are Korean).
+for (const [code, name] of LANGUAGES) $('language').add(new Option(name, code));
+$('language').onchange = (e) => {
+  store.setLanguage(e.target.value);
+  applyStatic();
+  renderSettings();
+  loadedKey = null; // redraw the Bible pane's messages in the new language
+  refresh();
+  show(currentView);
+};
+// Only the versions that fit the "Bible reading - video" choice can be picked (the reading videos are Korean).
 function renderSettings() {
   for (const o of $('version').options) o.disabled = !store.versionAllowed(Number(o.value));
   $('version').value = String(store.activeVersion());
   $('afterLecture').value = store.afterLecture();
+  $('language').value = store.language();
   $('versionNote').hidden = store.afterLecture() !== 'videos';
 }
+applyStatic();
 renderSettings();
 $('version').onchange = (e) => { store.setBibleVersion(Number(e.target.value)); renderSettings(); refresh(); };
 $('afterLecture').onchange = (e) => { store.setAfterLecture(e.target.value); renderSettings(); refresh(); };
@@ -300,7 +314,7 @@ async function start() {
         videosFirst.then((ok) => { if (!ok && !openBibleApp(video)) go(1); });
       },
       onError: (code) => reading ? nextSegment() : showError(
-        code === 100 ? 'This video was removed or is private.' : "This video can't be played in the app.",
+        code === 100 ? t('videoRemoved') : t('videoBlocked'),
         store.current(),
       ),
     });

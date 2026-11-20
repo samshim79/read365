@@ -14,49 +14,51 @@
   <main>
     <section id="playerView">
       <header class="bar">
-        <h1 id="where">Loading...</h1>
+        <h1 id="where" data-i18n="loading">Loading...</h1>
         <div id="tools" class="tools"></div>
       </header>
       <div id="passages" class="chips"></div>
       <div class="video"><div id="yt"></div></div>
       <p id="error" role="alert" hidden></p>
       <p id="notice" hidden></p>
-      <button id="retry" hidden>Retry</button>
+      <button id="retry" data-i18n="retry" hidden>Retry</button>
       <div class="controls">
-        <button id="prev">◀ Prev</button>
+        <button id="prev" data-i18n="prev">◀ Prev</button>
         <button id="done">Mark done</button>
-        <button id="next">Next ▶</button>
+        <button id="next" data-i18n="next">Next ▶</button>
       </div>
       <div id="bibleWrap" hidden><div id="reader" lang="ko"></div><iframe id="bible" title="YouVersion audio" hidden></iframe></div>
     </section>
     <section id="playlistView" hidden>
       <div class="bar">
-        <h1>Playlist</h1>
+        <h1 data-i18n="playlist">Playlist</h1>
         <p id="doneCount"></p>
       </div>
       <ul id="list"></ul>
     </section>
     <section id="progressView" hidden>
-      <h1>Progress</h1>
+      <h1 data-i18n="progress">Progress</h1>
       <div id="progress"></div>
     </section>
     <section id="settingsView" hidden>
-      <h1>Settings</h1>
-      <label for="afterLecture">When a lecture ends</label>
+      <h1 data-i18n="settings">Settings</h1>
+      <label for="language" data-i18n="language">Language</label>
+      <select id="language"></select>
+      <label for="afterLecture" data-i18n="readingMode">Bible reading - video</label>
       <select id="afterLecture">
-        <option value="videos">Play the reading videos (YouTube)</option>
-        <option value="bible">Open the reading in the Bible app</option>
+        <option value="videos" data-i18n="modeVideos">Play the reading videos (YouTube)</option>
+        <option value="bible" data-i18n="modeBible">Open the reading in the Bible app</option>
       </select>
-      <label for="version">Bible version</label>
+      <label for="version" data-i18n="bibleVersion">Bible version</label>
       <select id="version"></select>
-      <p id="versionNote" class="note" hidden>The reading videos are in Korean, so the text is 개역한글. To use another version, choose “Open the reading in the Bible app”.</p>
+      <p id="versionNote" class="note" data-i18n="versionNote" hidden>The reading videos are in Korean, so the text is 개역한글. To use another version, choose “Open the reading in the Bible app”.</p>
     </section>
   </main>
   <nav>
-    <button id="navPlayer" class="active">Player</button>
-    <button id="navPlaylist">Playlist</button>
-    <button id="navProgress" hidden>Progress</button>
-    <button id="navSettings">Settings</button>
+    <button id="navPlayer" class="active" data-i18n="navPlayer">Player</button>
+    <button id="navPlaylist" data-i18n="navPlaylist">Playlist</button>
+    <button id="navProgress" data-i18n="navProgress" hidden>Progress</button>
+    <button id="navSettings" data-i18n="navSettings">Settings</button>
   </nav>
   <script type="module" src="app.js"></script>
 </body>
