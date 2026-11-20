@@ -5,6 +5,7 @@ let onTick = () => {};
 let onEnded = () => {};
 let onError = () => {};
 let resumeAt = 0;
+let segment = null; // { start, end, checked } while a reading video plays; null for a lecture
 
 const apiReady = () => new Promise((resolve, reject) => {
   if (window.YT && window.YT.Player) return resolve();
@@ -23,6 +24,13 @@ function tick() {
 function onStateChange(e) {
   const S = window.YT.PlayerState;
   if (e.data === S.PLAYING) {
+    // A reading video must start at its passage. The player can ignore startSeconds (for example when the same
+    // chapter video is loaded again for the next passage), so check once and seek if it started elsewhere.
+    if (segment && !segment.checked) {
+      segment.checked = true;
+      const t = player.getCurrentTime();
+      if (t < segment.start - 2 || t > segment.end) player.seekTo(segment.start, true);
+    }
     clearInterval(timer);
     timer = setInterval(tick, 5000);
   } else {
@@ -53,15 +61,15 @@ export async function mount(el, handlers) {
 
 export function cue(videoId, seconds) {
   resumeAt = seconds;
+  segment = null;
   player.cueVideoById({ videoId, startSeconds: seconds });
 }
 
-// Load and play a video now, from `start` seconds and (optionally) stopping at `end` seconds, where it reports ENDED.
+// Load and play a reading video now, from `start` seconds to `end` seconds, where it reports ENDED.
 export function load(videoId, start = 0, end) {
   resumeAt = 0;
-  const opts = { videoId, startSeconds: start };
-  if (end) opts.endSeconds = end;
-  player.loadVideoById(opts);
+  segment = { start, end, checked: false };
+  player.loadVideoById({ videoId, startSeconds: start, endSeconds: end });
 }
 
 // Pause the lecture (used when read-aloud starts); the PAUSED state change saves the position
