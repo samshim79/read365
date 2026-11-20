@@ -4,6 +4,8 @@ import readings from './data/readings.js';
 import { bookNumber, passageRange, plainText, loadPassage, chapterAudioUrl, passageAudio, verseTimes, TIMING } from './bible.js';
 import readingsAll from './data/readings.js';
 import { chapterVideo, hasVideos, buildQueue } from './reading.js';
+import { measuredTimes } from './bible.js';
+import { alignVerses } from './tools/align-verses.mjs';
 
 test('book numbers follow the standard order', () => {
   assert.equal(bookNumber('GEN'), 1);
@@ -136,4 +138,26 @@ test('buildQueue: plays the whole chapter when the text for timing is unavailabl
   globalThis.fetch = async () => ({ ok: false, status: 500 });
   const q = await buildQueue([['막 4:35-5:20', 'MRK.4.35', 5, 20]]);
   assert.deepEqual(q.map((s) => [s.chapter, s.start, s.end]), [[4, 0, undefined], [5, 0, undefined]]);
+});
+
+test('measuredTimes: from just before the first verse to just before the next one', () => {
+  const starts = [0, 10, 20, 30, 40];
+  assert.deepEqual(measuredTimes(starts, 2, 3), { start: 9.5, end: 29.8 });
+  assert.deepEqual(measuredTimes(starts, 1, 5), { start: 0, end: undefined });
+  assert.deepEqual(measuredTimes(starts, 4, 4), { start: 29.5, end: 39.8 }); // a lone verse
+});
+
+test('buildQueue uses measured times where a chapter has them (day 278: 마4:12, 막1:14)', async () => {
+  globalThis.fetch = async () => { throw new Error('no network needed for measured chapters'); };
+  const q = await buildQueue([['마 4:12', 'MAT.4.12', 4, 12], ['막 1:14', 'MRK.1.14', 1, 14], ['눅 3:19-20', 'LUK.3.19-20', 3, 20]]);
+  assert.deepEqual(q.map((s) => [s.chapter, s.start, s.end]), [[4, 79.6, 86.5], [1, 100.5, 107], [3, 153.7, 166.9]]);
+});
+
+test('alignVerses finds verse starts in a transcript, skipping music and garbled lines', () => {
+  const verses = [[1, '태초에 하나님이 천지를 창조하시니라'], [2, '땅이 혼돈하고 공허하며'], [3, '하나님이 가라사대 빛이 있으라 하시매 빛이 있었고']];
+  const segments = [[0, '[음악]'], [3, '태초에 하나님이 천지를 창조하시니라'], [9, '땅이 혼돈하고 공허하며 하나님이'], [15, '가라사대 빛이 있으라 하시매 빛이 있었고']];
+  const s = alignVerses(verses, segments, 22);
+  assert.ok(Math.abs(s[0] - 3) < 1, String(s));
+  assert.ok(Math.abs(s[1] - 9) < 1, String(s));
+  assert.ok(s[2] > 11 && s[2] < 15, String(s));
 });
