@@ -57,7 +57,7 @@ function renderPassages(video) {
   const box = $('passages'); // one row of passage chips under the title
   const tools = $('tools');  // 🔊 and ↗, on the title row at the right
   const list = readings[video.day] || [];
-  const version = versionById(store.bibleVersion());
+  const version = versionById(store.activeVersion());
   box.replaceChildren();
   tools.replaceChildren();
   speakChip = null;
@@ -186,7 +186,7 @@ function openBibleApp(video) {
   if (!list.length) return false;
   shownIdx = 0;
   renderPassages(video);
-  const url = passageUrl(list[0][1], store.bibleVersion());
+  const url = passageUrl(list[0][1], store.activeVersion());
   // Browsers may block a new window that wasn't opened by a tap (and nothing opens while the screen is locked):
   // then show a one-tap link instead.
   const win = window.open(url, '_blank');
@@ -207,7 +207,7 @@ function openBibleApp(video) {
 // The lecture ended: read all of today's passages aloud from the first one. False if there is nothing to read.
 function readDay(video) {
   const list = readings[video.day] || [];
-  const version = versionById(store.bibleVersion());
+  const version = versionById(store.activeVersion());
   if (store.listen() && version.yvAudio) return list.length > 0; // Listen mode: stay on this lecture so the narration can be played
   if (!list.length || !(version.audio || (reader.canSpeak && version.bolls))) return false;
   advanceAfterReading = true;
@@ -267,10 +267,17 @@ $('navPlaylist').onclick = () => show('playlistView');
 $('navProgress').onclick = () => show('progressView');
 $('navSettings').onclick = () => show('settingsView');
 
-for (const v of VERSIONS) $('version').add(new Option(v.name, v.id, false, v.id === store.bibleVersion()));
-$('version').onchange = (e) => { store.setBibleVersion(Number(e.target.value)); refresh(); };
-$('afterLecture').value = store.afterLecture();
-$('afterLecture').onchange = (e) => { store.setAfterLecture(e.target.value); refresh(); };
+for (const v of VERSIONS) $('version').add(new Option(v.name, v.id));
+// Only the versions that fit the "When a lecture ends" choice can be picked (the reading videos are Korean).
+function renderSettings() {
+  for (const o of $('version').options) o.disabled = !store.versionAllowed(Number(o.value));
+  $('version').value = String(store.activeVersion());
+  $('afterLecture').value = store.afterLecture();
+  $('versionNote').hidden = store.afterLecture() !== 'videos';
+}
+renderSettings();
+$('version').onchange = (e) => { store.setBibleVersion(Number(e.target.value)); renderSettings(); refresh(); };
+$('afterLecture').onchange = (e) => { store.setAfterLecture(e.target.value); renderSettings(); refresh(); };
 
 function flush() { player.flush(); }
 document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });

@@ -1,6 +1,6 @@
 // State + persistence. Everything lives under one versioned localStorage key.
 const KEY = 'read365:v1';
-const fresh = () => ({ current: null, positions: {}, done: {}, bibleVersion: 100, listen: false, afterLecture: 'bible' });
+const fresh = () => ({ current: null, positions: {}, done: {}, bibleVersion: 88, listen: false, afterLecture: 'videos' });
 let s = fresh();
 
 function persist() {
@@ -23,11 +23,16 @@ export const isDone = (id) => id in s.done;
 export const doneCount = () => Object.keys(s.done).length;
 export const bibleVersion = () => s.bibleVersion;
 export function setBibleVersion(id) { s.bibleVersion = id; persist(); }
+// The reading videos are Korean (개역개정 narration), so while they are on, only these versions can be chosen and the
+// text shows 개역한글 (bolls.life has no 개역개정). The saved choice is kept for when the Bible app option is back on.
+export const READING_VIDEO_VERSIONS = [88];
+export const versionAllowed = (id) => afterLecture() !== 'videos' || READING_VIDEO_VERSIONS.includes(id);
+export const activeVersion = () => (versionAllowed(s.bibleVersion) ? s.bibleVersion : READING_VIDEO_VERSIONS[0]);
 // Listen mode: the Bible pane shows YouVersion's narrated audio page instead of the in-app text
 export const listen = () => !!s.listen;
 export function setListen(on) { s.listen = !!on; persist(); }
-// What happens when a lecture ends: 'bible' opens the reading in the Bible app, 'videos' plays the reading videos
-export const afterLecture = () => (s.afterLecture === 'videos' ? 'videos' : 'bible');
+// What happens when a lecture ends: 'videos' (the default) plays the reading videos, 'bible' opens the reading in the Bible app
+export const afterLecture = () => (s.afterLecture === 'bible' ? 'bible' : 'videos');
 export function setAfterLecture(mode) { s.afterLecture = mode === 'videos' ? 'videos' : 'bible'; persist(); }
 
 export function setCurrent(id) { s.current = id; persist(); }

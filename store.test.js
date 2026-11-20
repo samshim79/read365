@@ -34,12 +34,25 @@ test('toggleDone twice undoes it', () => {
   assert.equal(store.isDone('a'), false);
 });
 
-test('bible version defaults to NASB and is remembered', () => {
+test('defaults: the reading videos, with 개역한글 text', () => {
   store.load('a');
-  assert.equal(store.bibleVersion(), 100);
+  assert.equal(store.afterLecture(), 'videos');
+  assert.equal(store.bibleVersion(), 88);
+  assert.equal(store.activeVersion(), 88);
+});
+
+test('while the reading videos are on, only 개역한글 can be used; the saved choice comes back with the Bible app', () => {
+  store.load('a');
+  store.setAfterLecture('videos');
   store.setBibleVersion(142);
+  assert.equal(store.versionAllowed(142), false);
+  assert.equal(store.versionAllowed(88), true);
+  assert.equal(store.activeVersion(), 88);
+  store.setAfterLecture('bible');
+  assert.equal(store.versionAllowed(142), true);
+  assert.equal(store.activeVersion(), 142);
   store.load('a');
-  assert.equal(store.bibleVersion(), 142);
+  assert.equal(store.bibleVersion(), 142); // remembered
 });
 
 test('a saved NIV choice becomes NASB', () => {
