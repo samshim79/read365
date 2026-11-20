@@ -17,7 +17,7 @@ export function hasVideos(list) {
 }
 
 // The videos to play for a day's readings from passage `fromPassage` on, in order:
-// [{ passage, label, chapter, id, start, end }]. A passage that starts or stops mid-chapter gets estimated
+// [{ passage, label, chapter, id, duration, start, end }]. A passage that starts or stops mid-chapter gets estimated
 // start/end seconds (see verseTimes); if the chapter text can't be fetched, the whole chapter plays.
 // Resolves null when a chapter has no video.
 export async function buildQueue(list, fromPassage = 0) {
@@ -28,7 +28,7 @@ export async function buildQueue(list, fromPassage = 0) {
     const usfm = ref.split('.')[0];
     for (const s of passageRange(ref, endChapter, endVerse).segments) {
       const video = chapterVideo(usfm, s.chapter);
-      const whole = { passage, label, chapter: s.chapter, id: video.id, start: 0, end: undefined };
+      const whole = { passage, label, chapter: s.chapter, id: video.id, duration: video.duration, start: 0, end: undefined };
       if (s.from == null && s.to == null) { jobs.push(whole); continue; }
       jobs.push(loadChapter('KRV', usfm, s.chapter)
         .then((verses) => ({ ...whole, ...verseTimes(verses, video.duration, s.from, s.to) }))
