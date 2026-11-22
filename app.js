@@ -34,7 +34,7 @@ let loadedKey = null; // what the pane currently shows, so unrelated refreshes (
 let speakChip = null;
 let reading = null;     // { queue, i } while the Bible reading videos are playing in the lecture's player
 let readingToken = 0;   // bumped whenever reading is started or cancelled, so a slow start can't take over later
-let advanceAfterReading = false; // set when the lecture ends: read the day's passages, then move on to the next lecture
+let advanceAfterReading = false; // set when the lecture ends and the day's passages are being read aloud
 let autoSpeak = false; // set when read-aloud moves on to the next passage by itself, so it keeps reading once that text loads
 
 function paintSpeakChip() {
@@ -50,7 +50,7 @@ reader.setBeforeSpeak(() => player.pause()); // don't talk over the lecture
 reader.setFinishedListener(() => {
   const video = videos[indexOf(store.current())];
   if (shownIdx < (readings[video.day] || []).length - 1) { shownIdx++; autoSpeak = true; renderPassages(video); }
-  else if (advanceAfterReading) { advanceAfterReading = false; go(1); }
+  else if (advanceAfterReading) advanceAfterReading = false; // all read: stay on this lecture
 });
 
 function renderPassages(video) {
@@ -146,7 +146,7 @@ function renderPassages(video) {
     reader.show({ el: $('reader'), bolls: version.bolls, ref, endChapter, endVerse, lang: version.lang, fallbackUrl: passageUrl(ref, version.id), tracks, title: label })
       .then((ok) => {
         if (ok) { if (resume) reader.speak(0); }
-        else if (advanceAfterReading) { advanceAfterReading = false; go(1); } // the text didn't load: move on as before
+        else if (advanceAfterReading) advanceAfterReading = false; // the text didn't load: stay on this lecture
       });
   }
 }
@@ -173,11 +173,12 @@ function playSegment() {
   player.load(s.id, s.start, s.end ?? s.duration + 5);
 }
 
-// A reading video finished (or couldn't play): the next one, or on to the next lecture after the last.
+// A reading video finished (or couldn't play): the next one. After the last, back to this lecture (never on to the
+// next one by itself: the reader moves on with 다음 / Next).
 function nextSegment() {
   reading.i++;
   if (reading.i < reading.queue.length) playSegment();
-  else go(1);
+  else open(store.current());
 }
 
 // The lecture ended: open the day's first passage in the YouVersion app, as if ↗ was tapped. False if the day has no reading.
@@ -312,7 +313,7 @@ async function start() {
         const video = videos[indexOf(id)];
         // Per the Settings choice: the reading videos when the day has them; otherwise the Bible app
         const videosFirst = store.readingSource() ? startReading(video) : Promise.resolve(false);
-        videosFirst.then((ok) => { if (!ok && !openBibleApp(video)) go(1); });
+        videosFirst.then((ok) => { if (!ok) openBibleApp(video); }); // and stay on this lecture
       },
       onError: (code) => reading ? nextSegment() : showError(
         code === 100 ? t('videoRemoved') : t('videoBlocked'),
