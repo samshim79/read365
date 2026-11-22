@@ -1,5 +1,5 @@
 // App-shell cache only. Bump CACHE on each release. The YouTube player is never cached.
-const CACHE = 'read365-v52';
+const CACHE = 'read365-v53';
 const SHELL = [
   'bible.js', 'reader.js', 'reading.js', 'data/readings.js', 'data/reading-videos.js', 'data/verse-times.js', 'data/reading-videos-esv.js', 'data/verse-times-esv.js',
   './', 'index.html', 'app.js', 'store.js', 'player.js', 'style.css',
