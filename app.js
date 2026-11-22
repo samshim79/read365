@@ -307,7 +307,7 @@ async function start() {
         if (reading) { nextSegment(); return; }
         const id = store.current();
         store.savePosition(id, 0);
-        if (!store.isDone(id)) store.toggleDone(id);
+        // Done is only marked by the reader (the 완료 / Mark done button or the list), never automatically
         refresh();
         const video = videos[indexOf(id)];
         // Per the Settings choice: the reading videos when the day has them; otherwise the Bible app
