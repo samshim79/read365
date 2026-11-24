@@ -8,6 +8,10 @@ let onError = () => {};
 let resumeAt = 0;
 let segment = null; // { start, end, checked } while a reading video plays; null for a lecture
 let loadedId = null; // the video last loaded or cued
+// Whether the current video has played since it was loaded or cued. YouTube can report ENDED twice for one video
+// (for example at a reading's endSeconds, then again once the lecture is cued after the last reading); only the first,
+// after real playback, counts. Without this, the extra ENDED looked like the lecture ending and restarted the readings.
+let playedSinceLoad = false;
 
 const apiReady = () => new Promise((resolve, reject) => {
   if (window.YT && window.YT.Player) return resolve();
@@ -26,6 +30,7 @@ function tick() {
 function onStateChange(e) {
   const S = window.YT.PlayerState;
   if (e.data === S.PLAYING) {
+    playedSinceLoad = true;
     // A reading video always starts at its passage's start. The player can ignore startSeconds (for example when
     // the same chapter video is loaded again, or a passage is tapped while it plays), so check once and seek.
     if (segment && !segment.checked) startAtPassage(segment);
@@ -34,7 +39,13 @@ function onStateChange(e) {
   } else {
     clearInterval(timer);
     if (e.data === S.PAUSED) tick();
-    if (e.data === S.ENDED) onEnded();
+    // A reading video reloaded on the same chapter may not report PLAYING, so its end also counts once it has moved
+    // past its start. After a cue (segment null, nothing played) an ENDED is a leftover and is ignored.
+    if (e.data === S.ENDED && (playedSinceLoad || (segment && player.getCurrentTime() > segment.start + 1))) {
+      playedSinceLoad = false;
+      segment = null;
+      onEnded();
+    }
     // Saved position at or past the end (video re-edited): restart from 0
     if (e.data === S.CUED && resumeAt && resumeAt >= player.getDuration() - 2) player.seekTo(0, true);
   }
@@ -61,6 +72,7 @@ export function cue(videoId, seconds) {
   resumeAt = seconds;
   segment = null;
   loadedId = videoId;
+  playedSinceLoad = false;
   player.cueVideoById({ videoId, startSeconds: seconds });
 }
 
@@ -71,6 +83,7 @@ export function load(videoId, start = 0, end) {
   segment = seg;
   const same = videoId === loadedId;
   loadedId = videoId;
+  playedSinceLoad = false;
   player.loadVideoById({ videoId, startSeconds: start, endSeconds: end });
   // Reloading the video that is already playing may not report PLAYING again, so check it directly too.
   if (same) setTimeout(() => { if (segment === seg) startAtPassage(seg); }, 600);
