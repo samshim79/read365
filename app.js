@@ -168,9 +168,10 @@ function playSegment() {
   const s = reading.queue[reading.i];
   shownIdx = s.passage;
   refresh();
-  // Always give an end: the YouTube player can keep the previous video's end point when none is given,
-  // which stopped whole-chapter videos early and skipped passages. A whole chapter ends just past its length.
-  player.load(s.id, s.start, s.end ?? s.duration + 5);
+  // In the same chapter video as the passage before: seek, so the sound doesn't stop (screen locked). Otherwise load.
+  // A whole chapter has no `end` and plays until the video ends.
+  if (reading.i > 0 && player.jump(s.id, s.start, s.end)) return;
+  player.load(s.id, s.start, s.end, s.duration + 5);
 }
 
 // A reading video finished (or couldn't play): the next one. After the last, back to this lecture (never on to the

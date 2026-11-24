@@ -6,7 +6,7 @@ let onTick = () => {};
 let onEnded = () => {};
 let onError = () => {};
 let resumeAt = 0;
-let segment = null; // { start, end, checked } while a reading video plays; null for a lecture
+let segment = null; // { start, end, checked, fired } while a reading video plays; null for a lecture
 let loadedId = null; // the video last loaded or cued
 // Whether the current video has played since it was loaded or cued. YouTube can report ENDED twice for one video
 // (for example at a reading's endSeconds, then again once the lecture is cued after the last reading); only the first,
@@ -41,13 +41,31 @@ function onStateChange(e) {
     if (e.data === S.PAUSED) tick();
     // A reading video reloaded on the same chapter may not report PLAYING, so its end also counts once it has moved
     // past its start. After a cue (segment null, nothing played) an ENDED is a leftover and is ignored.
-    if (e.data === S.ENDED && (playedSinceLoad || (segment && player.getCurrentTime() > segment.start + 1))) {
+    if (e.data === S.ENDED && (playedSinceLoad || (segment && !segment.fired && player.getCurrentTime() > segment.start + 1))) {
       playedSinceLoad = false;
       segment = null;
       onEnded();
     }
     // Saved position at or past the end (video re-edited): restart from 0
     if (e.data === S.CUED && resumeAt && resumeAt >= player.getDuration() - 2) player.seekTo(0, true);
+  }
+}
+
+// The end of a reading passage is watched here, not left to YouTube's endSeconds: at endSeconds YouTube pauses, and
+// once the sound stops Android suspends the page (screen locked), so the next passage never started. Moving on while
+// the sound is still playing keeps the page awake. A short timer is set when the end is near, for an exact stop.
+let nearTimer;
+function checkEnd() {
+  const seg = segment;
+  if (!seg || seg.end == null || seg.fired || !player || player.getPlayerState() !== 1) return;
+  const left = seg.end - player.getCurrentTime();
+  if (left <= 0.05) {
+    seg.fired = true;
+    playedSinceLoad = false;
+    onEnded();
+  } else if (left < 2.5) {
+    clearTimeout(nearTimer);
+    nearTimer = setTimeout(checkEnd, left * 1000);
   }
 }
 
@@ -60,7 +78,7 @@ export async function mount(el, handlers) {
       height: '100%',
       playerVars: { playsinline: 1, rel: 0 },
       events: {
-        onReady: resolve,
+        onReady: () => { setInterval(checkEnd, 250); resolve(); },
         onStateChange,
         onError: (e) => onError(e.data),
       },
@@ -69,6 +87,7 @@ export async function mount(el, handlers) {
 }
 
 export function cue(videoId, seconds) {
+  clearTimeout(nearTimer);
   resumeAt = seconds;
   segment = null;
   loadedId = videoId;
@@ -76,17 +95,31 @@ export function cue(videoId, seconds) {
   player.cueVideoById({ videoId, startSeconds: seconds });
 }
 
-// Load and play a reading video now, from `start` seconds to `end` seconds, where it reports ENDED.
-export function load(videoId, start = 0, end) {
+// Load and play a reading video now, from `start` seconds; at `end` seconds (watched in checkEnd) it reports the end.
+// `stopAt` goes to YouTube as endSeconds, past the video's end: the player can keep a previous video's endSeconds when
+// none is given, which cut chapters short.
+export function load(videoId, start = 0, end, stopAt) {
   resumeAt = 0;
-  const seg = { start, end, checked: false };
+  clearTimeout(nearTimer);
+  const seg = { start, end, checked: false, fired: false };
   segment = seg;
   const same = videoId === loadedId;
   loadedId = videoId;
   playedSinceLoad = false;
-  player.loadVideoById({ videoId, startSeconds: start, endSeconds: end });
+  player.loadVideoById({ videoId, startSeconds: start, endSeconds: stopAt });
   // Reloading the video that is already playing may not report PLAYING again, so check it directly too.
   if (same) setTimeout(() => { if (segment === seg) startAtPassage(seg); }, 600);
+}
+
+// The next passage is in the video that is playing now: seek there without reloading, so the sound never stops.
+// False when that video isn't playing (then the caller loads it).
+export function jump(videoId, start, end) {
+  if (!player || videoId !== loadedId || ![1, 3].includes(player.getPlayerState())) return false;
+  clearTimeout(nearTimer);
+  segment = { start, end, checked: true, fired: false };
+  playedSinceLoad = true;
+  player.seekTo(start, true);
+  return true;
 }
 
 function startAtPassage(seg) {
