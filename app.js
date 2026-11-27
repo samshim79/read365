@@ -227,7 +227,7 @@ function refresh() {
   renderPassages(videos[i]);
   const s = reading && reading.queue[reading.i];
   $('where').textContent = s
-    ? t('readingNow', s.label, reading.i + 1, reading.queue.length)
+    ? t('readingNow', videoTitle(videos[i].title), s.label, reading.i + 1, reading.queue.length)
     : `${videoTitle(videos[i].title)} · ${i + 1} / ${videos.length}`;
   $('prev').disabled = i === 0;
   $('next').disabled = i === videos.length - 1;
